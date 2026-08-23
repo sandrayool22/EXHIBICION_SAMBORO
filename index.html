@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Samboro - Control de Sala de Ventas</title>
+  <title>Samboro - Bitácora de Lunes</title>
   <style>
     :root {
       --primary: #0F172A;
       --accent-green: #10B981;
       --accent-red: #EF4444;
-      --accent-yellow: #F59E0B;
       --bg: #F8FAFC;
       --card-bg: #FFFFFF;
       --text: #1E293B;
@@ -30,7 +29,7 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      padding-bottom: 70px;
+      padding-bottom: 75px;
     }
 
     .app-container {
@@ -73,13 +72,13 @@
       font-weight: 600;
     }
 
-    /* Area Visor/Vista Previa Fotográfica */
+    /* Visor de Cámara */
     .viewfinder {
       position: relative;
       width: 100%;
-      height: 35vh;
-      min-height: 220px;
-      max-height: 400px;
+      height: 28vh;
+      min-height: 200px;
+      max-height: 350px;
       background: #000;
       display: flex;
       flex-direction: column;
@@ -117,23 +116,6 @@
       font-weight: 600;
     }
 
-    .pin {
-      position: absolute;
-      z-index: 3;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      color: white;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-
-    .pin-ok { top: 35%; left: 10%; background-color: var(--accent-green); }
-    .pin-alert { top: 60%; right: 10%; background-color: var(--accent-red); }
-
     /* Formulario */
     .content {
       padding: 20px;
@@ -143,22 +125,23 @@
       flex: 1;
     }
 
-    .section-title {
-      font-size: 0.75rem;
+    .group-title {
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--text-muted);
+      color: var(--primary);
+      margin-top: 4px;
     }
 
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
@@ -166,17 +149,23 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.9rem;
-      color: var(--text);
-      font-weight: 500;
+      gap: 12px;
     }
 
-    /* Switches */
+    .item-label {
+      font-size: 0.85rem;
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    /* Custom Switch Toggle */
     .switch {
       position: relative;
       display: inline-block;
       width: 44px;
       height: 24px;
+      flex-shrink: 0;
     }
 
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -205,12 +194,24 @@
     input:checked + .slider { background-color: var(--accent-green); }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* Botones de Acción */
+    /* Observaciones */
+    .input-obs {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+    }
+
+    /* Acciones */
     .actions-grid {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      margin-top: auto;
+      margin-top: 10px;
     }
 
     .btn-photo {
@@ -242,7 +243,7 @@
     }
 
     .status-msg {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       text-align: center;
       color: var(--accent-green);
       font-weight: 600;
@@ -271,15 +272,8 @@
       font-weight: 500;
     }
 
-    .nav-item.active {
-      color: var(--primary);
-      font-weight: 700;
-    }
-
-    .nav-icon {
-      font-size: 1.1rem;
-      margin-bottom: 2px;
-    }
+    .nav-item.active { color: var(--primary); font-weight: 700; }
+    .nav-icon { font-size: 1.1rem; margin-bottom: 2px; }
 
     @media (min-width: 640px) {
       .actions-grid { flex-direction: row; }
@@ -290,78 +284,122 @@
 <body>
 
   <div class="app-container">
-    <!-- Header -->
+    <!-- Header con datos de Matriz de Responsables -->
     <header class="header">
       <div class="header-info">
         <h1>Samboro · Zona 7</h1>
-        <p>Bitácora de Inspección (Lunes)</p>
+        <p>Bitácora de Lunes (Canal Tiendas)</p>
       </div>
       <div class="user-badge">GPIRIR</div>
     </header>
 
-    <!-- Visor de Foto Real -->
+    <!-- Visor de Fotografía en Vivo -->
     <div class="viewfinder">
       <img id="photoPreview" src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80" alt="Exhibidor">
       <div class="viewfinder-overlay"></div>
-      <div class="badge-zone">Área: Fabricado / Cerámica</div>
-      
-      <div class="pin pin-ok" id="pinOk">✓ Exhibidor Limpio</div>
-      <div class="pin pin-alert" id="pinAlert">⚠ Pieza Fisurada</div>
+      <div class="badge-zone">Área Asignada: Fabricado (Cerámica)</div>
     </div>
 
-    <!-- Formulario / Lista de Verificación -->
+    <!-- Formulario Unificado por Secciones -->
     <main class="content">
-      <span class="section-title">Checklist Operativo</span>
-      
+
+      <!-- 1. Exhibiciones Generales -->
+      <span class="group-title">1. Exhibiciones Generales</span>
       <div class="card">
         <div class="check-item">
-          <span>Limpieza Profunda (Cerámica/Porcelanato)</span>
-          <label class="switch">
-            <input type="checkbox" checked>
-            <span class="slider"></span>
-          </label>
+          <span class="item-label">Limpieza total de cerámica, loza y porcelanato</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
         </div>
-        
         <div class="check-item">
-          <span>Precios y Etiquetas Actualizadas</span>
-          <label class="switch">
-            <input type="checkbox" checked>
-            <span class="slider"></span>
-          </label>
+          <span class="item-label">Verificación de precios y etiquetas correctas</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
         </div>
-
         <div class="check-item">
-          <span>Piezas Libres de Daño o Rotura</span>
-          <label class="switch">
-            <input type="checkbox" id="damageCheck">
-            <span class="slider"></span>
-          </label>
+          <span class="item-label">Retiro de modelos antiguos / descontinuados</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="check-item">
+          <span class="item-label">Detección y reporte de piezas dañadas o rotas</span>
+          <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+        <div class="check-item">
+          <span class="item-label">Solicitud de limpieza / reparación de tableros</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
         </div>
       </div>
 
-      <!-- INPUT NATIVO DE CÁMARA (Oculto) -->
-      <input 
-        type="file" 
-        id="cameraInput" 
-        accept="image/*" 
-        capture="environment" 
-        style="display: none;"
-      >
+      <!-- 2. Áreas de Trabajo y Especiales -->
+      <span class="group-title">2. Áreas de Trabajo y Especiales</span>
+      <div class="card">
+        <div class="check-item">
+          <span class="item-label">Escritorios e impresora (limpia, con papel y consumibles)</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="check-item">
+          <span class="item-label">Exhibidores Rubí y Fila organizados</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="check-item">
+          <span class="item-label">Área de adhesivos ordenada y limpia</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+      </div>
 
+      <!-- 3. Zonas Específicas -->
+      <span class="group-title">3. Zonas Específicas</span>
+      <div class="card">
+        <div class="check-item">
+          <span class="item-label">Inspección y orden de producto en parqueo</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="check-item">
+          <span class="item-label">Control de mallas y grifería</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="check-item">
+          <span class="item-label">Verificación y orden del Pasillo de Saldos</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <!-- 4. Gestión de Inventarios y Novedades (Unificado) -->
+      <span class="group-title">4. Gestión de Inventario y Novedades</span>
+      <div class="card">
+        <div class="check-item">
+          <span class="item-label">Solicitud de stock de Rubí, Fila y adhesivos</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="check-item">
+          <span class="item-label">Revisión y solicitud de novedades recién salidas de producción</span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <!-- Observaciones / Pendientes -->
+      <span class="group-title">Observaciones / Pendientes</span>
+      <div class="card">
+        <input type="text" class="input-obs" placeholder="Escriba aquí acciones pendientes o detalles...">
+      </div>
+
+      <!-- INPUT NATIVO DE CÁMARA (Oculto) -->
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+
+      <!-- Acciones de Envíos -->
       <div class="actions-grid">
         <button class="btn-photo" onclick="document.getElementById('cameraInput').click()">
           📷 Abrir Cámara / Capturar Foto
         </button>
         <button class="btn-submit" onclick="submitForm()">
-          Enviar Evidencia
+          Enviar Bitácora de Lunes
         </button>
       </div>
 
-      <div class="status-msg" id="statusMsg">✓ Bitácora enviada exitosamente a Jefatura.</div>
+      <div class="status-msg" id="statusMsg">✓ Bitácora guardada correctamente y enviada a Jefatura.</div>
+
     </main>
   </div>
 
-  <!-- Navegación Inferior -->
+  <!-- Navegación Fija -->
   <nav class="nav-bar">
     <div class="nav-item">
       <span class="nav-icon">🏠</span>
@@ -369,16 +407,16 @@
     </div>
     <div class="nav-item active">
       <span class="nav-icon">📷</span>
-      Inspección
+      Bitácora
     </div>
     <div class="nav-item">
       <span class="nav-icon">📊</span>
-      Bitácoras
+      Reportes
     </div>
   </nav>
 
   <script>
-    // Evento para capturar la foto real desde el teléfono y cargarla en el visor
+    // Conectar cámara nativa del móvil
     const cameraInput = document.getElementById('cameraInput');
     const photoPreview = document.getElementById('photoPreview');
 
@@ -396,9 +434,7 @@
     function submitForm() {
       const msg = document.getElementById('statusMsg');
       msg.style.display = 'block';
-      setTimeout(() => {
-        msg.style.display = 'none';
-      }, 4000);
+      setTimeout(() => { msg.style.display = 'none'; }, 4000);
     }
   </script>
 
