@@ -30,20 +30,19 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      padding-bottom: 60px; /* Espacio para la barra de navegación */
+      padding-bottom: 70px;
     }
 
-    /* Layout Responsivo Principal */
     .app-container {
       width: 100%;
-      max-width: 800px; /* Centrado fluido en pantallas grandes */
+      max-width: 800px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
       flex: 1;
     }
 
-    /* Header Superior */
+    /* Header */
     .header {
       background-color: var(--primary);
       color: white;
@@ -72,33 +71,43 @@
       border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 600;
-      letter-spacing: 0.5px;
     }
 
-    /* Visor / Visión en Vivo */
+    /* Area Visor/Vista Previa Fotográfica */
     .viewfinder {
       position: relative;
       width: 100%;
-      height: 35vh; /* Altura adaptativa respecto al alto de la pantalla */
+      height: 35vh;
       min-height: 220px;
       max-height: 400px;
-      background: #CBD5E1 url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+      background: #000;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 16px;
+      overflow: hidden;
+    }
+
+    .viewfinder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 1;
     }
 
     .viewfinder-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.25);
+      background: rgba(15, 23, 42, 0.2);
+      z-index: 2;
     }
 
     .badge-zone {
       position: relative;
-      z-index: 2;
+      z-index: 3;
       align-self: flex-start;
+      margin: 16px;
       background: rgba(15, 23, 42, 0.75);
       backdrop-filter: blur(4px);
       color: white;
@@ -108,10 +117,9 @@
       font-weight: 600;
     }
 
-    /* Tags flotantes sobre la foto */
     .pin {
       position: absolute;
-      z-index: 2;
+      z-index: 3;
       padding: 6px 12px;
       border-radius: 20px;
       font-size: 0.75rem;
@@ -123,26 +131,10 @@
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
-    .pin-ok {
-      top: 35%;
-      left: 10%;
-      background-color: var(--accent-green);
-    }
+    .pin-ok { top: 35%; left: 10%; background-color: var(--accent-green); }
+    .pin-alert { top: 60%; right: 10%; background-color: var(--accent-red); }
 
-    .pin-alert {
-      top: 60%;
-      right: 10%;
-      background-color: var(--accent-red);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-
-    /* Formulario / Checklist */
+    /* Formulario */
     .content {
       padding: 20px;
       display: flex;
@@ -187,11 +179,7 @@
       height: 24px;
     }
 
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+    .switch input { opacity: 0; width: 0; height: 0; }
 
     .slider {
       position: absolute;
@@ -214,13 +202,8 @@
       border-radius: 50%;
     }
 
-    input:checked + .slider {
-      background-color: var(--accent-green);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
+    input:checked + .slider { background-color: var(--accent-green); }
+    input:checked + .slider:before { transform: translateX(20px); }
 
     /* Botones de Acción */
     .actions-grid {
@@ -258,12 +241,18 @@
       box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.15);
     }
 
-    /* Barra Inferior Móvil Fija */
+    .status-msg {
+      font-size: 0.8rem;
+      text-align: center;
+      color: var(--accent-green);
+      font-weight: 600;
+      display: none;
+    }
+
+    /* Barra Inferior Fija */
     .nav-bar {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       height: 60px;
       background: white;
       border-top: 1px solid var(--border);
@@ -280,7 +269,6 @@
       font-size: 0.7rem;
       color: var(--text-muted);
       font-weight: 500;
-      cursor: pointer;
     }
 
     .nav-item.active {
@@ -293,17 +281,9 @@
       margin-bottom: 2px;
     }
 
-    /* Ajustes para Pantallas de Escritorio/Tablet */
     @media (min-width: 640px) {
-      .content {
-        padding: 24px;
-      }
-      .actions-grid {
-        flex-direction: row;
-      }
-      .btn-photo, .btn-submit {
-        flex: 1;
-      }
+      .actions-grid { flex-direction: row; }
+      .btn-photo, .btn-submit { flex: 1; }
     }
   </style>
 </head>
@@ -319,13 +299,14 @@
       <div class="user-badge">GPIRIR</div>
     </header>
 
-    <!-- Visor Fotográfico -->
+    <!-- Visor de Foto Real -->
     <div class="viewfinder">
+      <img id="photoPreview" src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80" alt="Exhibidor">
       <div class="viewfinder-overlay"></div>
       <div class="badge-zone">Área: Fabricado / Cerámica</div>
       
-      <div class="pin pin-ok">✓ Exhibidor Limpio</div>
-      <div class="pin pin-alert">⚠ Pieza Fisurada</div>
+      <div class="pin pin-ok" id="pinOk">✓ Exhibidor Limpio</div>
+      <div class="pin pin-alert" id="pinAlert">⚠ Pieza Fisurada</div>
     </div>
 
     <!-- Formulario / Lista de Verificación -->
@@ -352,24 +333,35 @@
         <div class="check-item">
           <span>Piezas Libres de Daño o Rotura</span>
           <label class="switch">
-            <input type="checkbox">
+            <input type="checkbox" id="damageCheck">
             <span class="slider"></span>
           </label>
         </div>
       </div>
 
+      <!-- INPUT NATIVO DE CÁMARA (Oculto) -->
+      <input 
+        type="file" 
+        id="cameraInput" 
+        accept="image/*" 
+        capture="environment" 
+        style="display: none;"
+      >
+
       <div class="actions-grid">
-        <button class="btn-photo">
-          📷 Adjuntar Nueva Foto
+        <button class="btn-photo" onclick="document.getElementById('cameraInput').click()">
+          📷 Abrir Cámara / Capturar Foto
         </button>
-        <button class="btn-submit">
+        <button class="btn-submit" onclick="submitForm()">
           Enviar Evidencia
         </button>
       </div>
+
+      <div class="status-msg" id="statusMsg">✓ Bitácora enviada exitosamente a Jefatura.</div>
     </main>
   </div>
 
-  <!-- Barra de Navegación Fija -->
+  <!-- Navegación Inferior -->
   <nav class="nav-bar">
     <div class="nav-item">
       <span class="nav-icon">🏠</span>
@@ -384,6 +376,31 @@
       Bitácoras
     </div>
   </nav>
+
+  <script>
+    // Evento para capturar la foto real desde el teléfono y cargarla en el visor
+    const cameraInput = document.getElementById('cameraInput');
+    const photoPreview = document.getElementById('photoPreview');
+
+    cameraInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          photoPreview.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function submitForm() {
+      const msg = document.getElementById('statusMsg');
+      msg.style.display = 'block';
+      setTimeout(() => {
+        msg.style.display = 'none';
+      }, 4000);
+    }
+  </script>
 
 </body>
 </html>
