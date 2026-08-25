@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Samboro - Control Unificado de Sala de Ventas</title>
+  <title>Samboro - Bitácora Móvil por Familias</title>
   <style>
     :root {
       --primary: #0F172A;
@@ -41,7 +41,7 @@
       flex: 1;
     }
 
-    /* Header Superior */
+    /* Header */
     .header {
       background-color: var(--primary);
       color: white;
@@ -54,16 +54,8 @@
       z-index: 10;
     }
 
-    .header-info h1 {
-      font-size: 1.1rem;
-      font-weight: 700;
-    }
-
-    .header-info p {
-      font-size: 0.8rem;
-      color: #94A3B8;
-    }
-
+    .header-info h1 { font-size: 1.1rem; font-weight: 700; }
+    .header-info p { font-size: 0.8rem; color: #94A3B8; }
     .user-badge {
       background: rgba(255, 255, 255, 0.1);
       padding: 6px 12px;
@@ -72,43 +64,9 @@
       font-weight: 600;
     }
 
-    /* Panel de Resumen de Áreas Asignadas */
-    .summary-card {
-      margin: 16px 20px 0 20px;
-      padding: 14px 16px;
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    .summary-header {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .tags-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .tag {
-      background: #E2E8F0;
-      color: var(--primary);
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    /* Botón Rápido en Lote */
+    /* Botón Global de Lote (1-Tap) */
     .quick-batch-card {
-      margin: 12px 20px 0 20px;
+      margin: 16px 20px 0 20px;
       padding: 12px 16px;
       background: #EFF6FF;
       border: 1px solid #BFDBFE;
@@ -129,23 +87,22 @@
       background: var(--accent-green);
       color: white;
       border: none;
-      padding: 10px 16px;
+      padding: 10px 14px;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
       box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
     }
 
-    /* Visor de Cámara Novedoso */
+    /* Visor Fotográfico Compacto */
     .viewfinder {
       position: relative;
       width: calc(100% - 40px);
       margin: 16px 20px 0 20px;
-      height: 22vh;
-      min-height: 180px;
-      max-height: 280px;
+      height: 18vh;
+      min-height: 150px;
       background: #000;
       border-radius: 12px;
       display: flex;
@@ -184,54 +141,107 @@
       font-weight: 600;
     }
 
-    /* Formulario */
+    /* Contenido Principal */
     .content {
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       flex: 1;
     }
 
-    .group-title {
-      font-size: 0.8rem;
+    .section-label {
+      font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--primary);
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
-    .card {
+    /* Acordeón por Familia */
+    .family-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      transition: border-color 0.2s;
     }
 
+    .family-header {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #FFFFFF;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .family-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .family-status {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: #F1F5F9;
+      color: var(--text-muted);
+    }
+
+    .family-body {
+      padding: 0 16px 16px 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      background: #FAFAFA;
+    }
+
+    .family-card.open .family-body {
+      display: flex;
+      padding-top: 14px;
+    }
+
+    .family-card.open .icon-arrow {
+      transform: rotate(180deg);
+    }
+
+    .icon-arrow {
+      font-size: 0.8rem;
+      transition: transform 0.2s;
+      color: var(--text-muted);
+    }
+
+    /* Check Items Compactos */
     .check-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .item-label {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--text);
       font-weight: 500;
-      line-height: 1.3;
+      line-height: 1.2;
     }
 
     /* Switches */
     .switch {
       position: relative;
       display: inline-block;
-      width: 44px;
-      height: 24px;
+      width: 40px;
+      height: 22px;
       flex-shrink: 0;
     }
 
@@ -243,14 +253,14 @@
       top: 0; left: 0; right: 0; bottom: 0;
       background-color: #CBD5E1;
       transition: .3s;
-      border-radius: 24px;
+      border-radius: 22px;
     }
 
     .slider:before {
       position: absolute;
       content: "";
-      height: 18px;
-      width: 18px;
+      height: 16px;
+      width: 16px;
       left: 3px;
       bottom: 3px;
       background-color: white;
@@ -259,9 +269,8 @@
     }
 
     input:checked + .slider { background-color: var(--accent-green); }
-    input:checked + .slider:before { transform: translateX(20px); }
+    input:checked + .slider:before { transform: translateX(18px); }
 
-    /* Campo de Observaciones */
     .input-obs {
       width: 100%;
       padding: 10px;
@@ -273,7 +282,7 @@
       outline: none;
     }
 
-    /* Acciones */
+    /* Botones finales */
     .actions-grid {
       display: flex;
       flex-direction: column;
@@ -317,7 +326,7 @@
       display: none;
     }
 
-    /* Barra Inferior Fija */
+    /* Nav Bar */
     .nav-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -351,155 +360,213 @@
 <body>
 
   <div class="app-container">
-    <!-- Header principal -->
     <header class="header">
       <div class="header-info">
         <h1>Samboro · Zona 7</h1>
-        <p>Control de Lunes (Canal Tiendas)</p>
+        <p>Bitácora de Lunes (Canal Tiendas)</p>
       </div>
       <div class="user-badge">EMURALLES</div>
     </header>
 
-    <!-- Resumen Informativo de Familias Asignadas -->
-    <div class="summary-card">
-      <div class="summary-header">Mis Familias Asignadas Hoy:</div>
-      <div class="tags-container">
-        <span class="tag">Cerámica Importada</span>
-        <span class="tag">Adhesivos</span>
-        <span class="tag">Piedra Sinterizada</span>
-      </div>
-    </div>
-
-    <!-- Botón Rápido en Lote (Marca todas las secciones en una sola pantalla) -->
+    <!-- Botón Global de 1-Tap -->
     <div class="quick-batch-card">
-      <span>¿Todo en orden en tus familias?</span>
-      <button class="btn-batch-ok" onclick="checkAllTrue()">✓ Marcar Todo OK</button>
+      <span>¿Todas tus familias están en orden?</span>
+      <button class="btn-batch-ok" onclick="checkAllTrue()">✓ Validar Todo OK</button>
     </div>
 
     <!-- Visor Fotográfico -->
     <div class="viewfinder">
       <img id="photoPreview" src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80" alt="Exhibidor">
       <div class="viewfinder-overlay"></div>
-      <div class="badge-zone">Evidencia General de Familias</div>
+      <div class="badge-zone">Evidencia General de Exhibiciones</div>
     </div>
 
-    <!-- Checklist Unificado en Pantalla Única (Políticas Samboro) -->
     <main class="content">
 
-      <!-- 1. Exhibiciones Generales -->
-      <span class="group-title">1. Exhibiciones Generales</span>
-      <div class="card">
-        <div class="check-item">
-          <span class="item-label">Limpieza total de cerámica, loza y porcelanato</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
+      <span class="section-label">Checklist por Familia Asignada</span>
+
+      <!-- FAMILIA 1: Cerámica y Porcelanato -->
+      <div class="family-card" id="card-ceramica">
+        <div class="family-header" onclick="toggleCard('card-ceramica')">
+          <div class="family-title">
+            <span>📦</span> Cerámica y Porcelanato
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="family-status" id="status-ceramica">Pendiente</span>
+            <span class="icon-arrow">▼</span>
+          </div>
         </div>
-        <div class="check-item">
-          <span class="item-label">Verificación de precios y etiquetas correctas</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
-        </div>
-        <div class="check-item">
-          <span class="item-label">Retiro de modelos antiguos o descontinuados</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
-        </div>
-        <div class="check-item">
-          <span class="item-label">Detección y reporte de piezas dañadas o rotas</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
-        </div>
-        <div class="check-item">
-          <span class="item-label">Solicitud de limpieza / reparación de tableros</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
+        <div class="family-body">
+          <div class="check-item">
+            <span class="item-label">Limpieza total de piezas y exhibidores</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Verificación de precios y etiquetas</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Retiro de modelos descontinuados</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Reporte de piezas dañadas o rotas</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Solicitud de reparación de tableros</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
         </div>
       </div>
 
-      <!-- 2. Áreas de Trabajo y Especiales -->
-      <span class="group-title">2. Áreas de Trabajo y Especiales</span>
-      <div class="card">
-        <div class="check-item">
-          <span class="item-label">Escritorios e impresora (limpios, con papel y consumibles)</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
+      <!-- FAMILIA 2: Adhesivos y Pegamentos -->
+      <div class="family-card" id="card-adhesivos">
+        <div class="family-header" onclick="toggleCard('card-adhesivos')">
+          <div class="family-title">
+            <span>🏗️</span> Adhesivos y Complementos
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="family-status" id="status-adhesivos">Pendiente</span>
+            <span class="icon-arrow">▼</span>
+          </div>
         </div>
-        <div class="check-item">
-          <span class="item-label">Exhibidores de Rubí y Fila organizados</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
-        </div>
-        <div class="check-item">
-          <span class="item-label">Área de adhesivos ordenada y limpia</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
-        </div>
-      </div>
-
-      <!-- 3. Zonas Específicas -->
-      <span class="group-title">3. Zonas Específicas</span>
-      <div class="card">
-        <div class="check-item">
-          <span class="item-label">Inspección y orden de producto en parqueo</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
-        </div>
-        <div class="check-item">
-          <span class="item-label">Control de mallas y grifería</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
-        </div>
-        <div class="check-item">
-          <span class="item-label">Verificación y orden del Pasillo de Saldos</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
+        <div class="family-body">
+          <div class="check-item">
+            <span class="item-label">Área de adhesivos ordenada y limpia</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-adhesivos')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Precios y viñetas visibles en estiba</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-adhesivos')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Solicitud de stock de reposición</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-adhesivos')"><span class="slider"></span></label>
+          </div>
         </div>
       </div>
 
-      <!-- 4. Gestión de Inventarios y Novedades -->
-      <span class="group-title">4. Gestión de Inventario y Novedades</span>
-      <div class="card">
-        <div class="check-item">
-          <span class="item-label">Solicitud de stock de Rubí, Fila y adhesivos</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
+      <!-- FAMILIA 3: Piedra Sinterizada y Mallas -->
+      <div class="family-card" id="card-sinterizada">
+        <div class="family-header" onclick="toggleCard('card-sinterizada')">
+          <div class="family-title">
+            <span>🪨</span> Piedra Sinterizada y Mallas
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="family-status" id="status-sinterizada">Pendiente</span>
+            <span class="icon-arrow">▼</span>
+          </div>
         </div>
-        <div class="check-item">
-          <span class="item-label">Revisión y solicitud de novedades recién salidas de producción</span>
-          <label class="switch"><input type="checkbox" class="chk-item"><span class="slider"></span></label>
+        <div class="family-body">
+          <div class="check-item">
+            <span class="item-label">Control y limpieza de exhibidores de mallas</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-sinterizada')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Exhibidores de Rubí y Fila organizados</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-sinterizada')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Revisión de piezas de gran formato sin grietas</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-sinterizada')"><span class="slider"></span></label>
+          </div>
         </div>
       </div>
 
-      <!-- Observaciones / Pendientes -->
-      <span class="group-title">Observaciones / Pendientes</span>
-      <div class="card">
-        <input type="text" class="input-obs" id="obsInput" placeholder="Escriba aquí acciones pendientes o detalles...">
+      <!-- FAMILIA 4: Zonas Generales y Trabajo -->
+      <div class="family-card" id="card-generales">
+        <div class="family-header" onclick="toggleCard('card-generales')">
+          <div class="family-title">
+            <span>🖥️</span> Áreas de Trabajo y Parqueo
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="family-status" id="status-generales">Pendiente</span>
+            <span class="icon-arrow">▼</span>
+          </div>
+        </div>
+        <div class="family-body">
+          <div class="check-item">
+            <span class="item-label">Escritorios e impresora (limpios y con insumos)</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-generales')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Orden de producto en parqueo y Pasillo de Saldos</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-generales')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Solicitud de novedades de producción</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-generales')"><span class="slider"></span></label>
+          </div>
+        </div>
       </div>
 
-      <!-- INPUT NATIVO DE CÁMARA (Oculto) -->
+      <!-- Observaciones -->
+      <span class="section-label">Observaciones General</span>
+      <div class="family-card" style="padding:14px;">
+        <input type="text" class="input-obs" id="obsInput" placeholder="Detalles de piezas dañadas o pendientes...">
+      </div>
+
       <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
 
-      <!-- Acciones de Envíos -->
       <div class="actions-grid">
         <button class="btn-photo" onclick="document.getElementById('cameraInput').click()">
-          📷 Capturar Evidencia Fotográfica
+          📷 Capturar Foto Evidencia
         </button>
         <button class="btn-submit" onclick="submitForm()">
           Enviar Bitácora de Lunes
         </button>
       </div>
 
-      <div class="status-msg" id="statusMsg">✓ Bitácora enviada exitosamente a la Jefatura Retail.</div>
+      <div class="status-msg" id="statusMsg">✓ Bitácora guardada y enviada a Jefatura.</div>
 
     </main>
   </div>
 
-  <!-- Navegación Fija -->
   <nav class="nav-bar">
-    <div class="nav-item">
-      <span class="nav-icon">🏠</span>
-      Inicio
-    </div>
-    <div class="nav-item active">
-      <span class="nav-icon">📷</span>
-      Bitácora
-    </div>
-    <div class="nav-item">
-      <span class="nav-icon">📊</span>
-      Reportes
-    </div>
+    <div class="nav-item"><span class="nav-icon">🏠</span>Inicio</div>
+    <div class="nav-item active"><span class="nav-icon">📷</span>Bitácora</div>
+    <div class="nav-item"><span class="nav-icon">📊</span>Reportes</div>
   </nav>
 
   <script>
-    // Conectar Cámara Nativa Móvil
+    // Abrir/Cerrar Tarjetas
+    function toggleCard(id) {
+      const card = document.getElementById(id);
+      card.classList.toggle('open');
+    }
+
+    // Actualizar Estado Visual de cada Familia
+    function updateCardStatus(cardId) {
+      const card = document.getElementById(cardId);
+      const checkboxes = card.querySelectorAll('.chk-item');
+      const statusSpan = card.querySelector('.family-status');
+      
+      let allChecked = true;
+      checkboxes.forEach(cb => { if(!cb.checked) allChecked = false; });
+
+      if(allChecked) {
+        statusSpan.innerText = '✓ Completo';
+        statusSpan.style.background = '#D1FAE5';
+        statusSpan.style.color = '#065F46';
+      } else {
+        statusSpan.innerText = 'Pendiente';
+        statusSpan.style.background = '#F1F5F9';
+        statusSpan.style.color = '#64748B';
+      }
+    }
+
+    // Botón 1-Tap para Aprobar Todo
+    function checkAllTrue() {
+      const checkboxes = document.querySelectorAll('.chk-item');
+      checkboxes.forEach(cb => cb.checked = true);
+
+      ['card-ceramica', 'card-adhesivos', 'card-sinterizada', 'card-generales'].forEach(id => {
+        updateCardStatus(id);
+      });
+    }
+
+    // Cargar Foto Nativa de Cámara
     const cameraInput = document.getElementById('cameraInput');
     const photoPreview = document.getElementById('photoPreview');
 
@@ -514,13 +581,6 @@
       }
     });
 
-    // Función 1-Tap para activar todos los switches en un solo clic
-    function checkAllTrue() {
-      const checkboxes = document.querySelectorAll('.chk-item');
-      checkboxes.forEach(cb => cb.checked = true);
-    }
-
-    // Confirmación al Enviar
     function submitForm() {
       const msg = document.getElementById('statusMsg');
       msg.style.display = 'block';
