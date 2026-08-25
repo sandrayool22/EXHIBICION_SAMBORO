@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samboro - Bitácora con Fotos por Familia</title>
+  <style>
+    :root {
+      --primary: #0F172A;
+      --accent-green: #10B981;
+      --accent-red: #EF4444;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-bottom: 75px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* Header */
+    .header {
+      background-color: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-info h1 { font-size: 1.1rem; font-weight: 700; }
+    .header-info p { font-size: 0.8rem; color: #94A3B8; }
+    .user-badge {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Botón Global 1-Tap */
+    .quick-batch-card {
+      margin: 16px 20px 0 20px;
+      padding: 12px 16px;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quick-batch-card span {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1E40AF;
+    }
+
+    .btn-batch-ok {
+      background: var(--accent-green);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Contenido */
+    .content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Tarjeta Acordeón por Familia */
+    .family-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .family-header {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #FFFFFF;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .family-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .family-status {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: #F1F5F9;
+      color: var(--text-muted);
+    }
+
+    .icon-arrow {
+      font-size: 0.8rem;
+      transition: transform 0.2s;
+      color: var(--text-muted);
+    }
+
+    .family-body {
+      padding: 0 16px 16px 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      background: #FAFAFA;
+    }
+
+    .family-card.open .family-body {
+      display: flex;
+      padding-top: 14px;
+    }
+
+    .family-card.open .icon-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* Checklist Items */
+    .check-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .item-label {
+      font-size: 0.82rem;
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    /* Switches */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #CBD5E1;
+      transition: .3s;
+      border-radius: 22px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: var(--accent-green); }
+    input:checked + .slider:before { transform: translateX(18px); }
+
+    /* Módulo de Foto Integrado por Familia */
+    .family-photo-box {
+      margin-top: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-family-photo {
+      background: white;
+      border: 1px solid #CBD5E1;
+      color: var(--primary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .family-preview-img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: none;
+    }
+
+    /* Campo de Observaciones */
+    .input-obs {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+    }
+
+    /* Botón Final */
+    .btn-submit {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 10px;
+      box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.15);
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      text-align: center;
+      color: var(--accent-green);
+      font-weight: 600;
+      display: none;
+    }
+
+    /* Nav Bar */
+    .nav-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-item.active { color: var(--primary); font-weight: 700; }
+    .nav-icon { font-size: 1.1rem; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header class="header">
+      <div class="header-info">
+        <h1>Samboro · Zona 7</h1>
+        <p>Bitácora de Lunes (Canal Tiendas)</p>
+      </div>
+      <div class="user-badge">EMURALLES</div>
+    </header>
+
+    <!-- Botón Global 1-Tap -->
+    <div class="quick-batch-card">
+      <span>¿Todas tus familias están en orden?</span>
+      <button class="btn-batch-ok" onclick="checkAllTrue()">✓ Validar Todo OK</button>
+    </div>
+
+    <main class="content">
+
+      <span class="section-label">Checklist y Fotos por Familia</span>
+
+      <!-- INPUT OCULTO DE CÁMARA (Procesa fotos dinámicamente) -->
+      <input type="file" id="dynamicCameraInput" accept="image/*" capture="environment" style="display: none;">
+
+      <!-- FAMILIA 1: Cerámica y Porcelanato -->
+      <div class="family-card" id="card-ceramica">
+        <div class="family-header" onclick="toggleCard('card-ceramica')">
+          <div class="family-title"><span>📦</span> Cerámica y Porcelanato</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="family-status" id="status-ceramica">Pendiente</span>
+            <span class="icon-arrow">▼</span>
+          </div>
+        </div>
+        <div class="family-body">
+          <div class="check-item">
+            <span class="item-label">Limpieza total de piezas y exhibidores</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Verificación de precios y etiquetas</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Retiro de modelos descontinuados</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Reporte de piezas dañadas o rotas</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-ceramica')"><span class="slider"></span></label>
+          </div>
+          
+          <!-- Módulo Fotográfico de Cerámica -->
+          <div class="family-photo-box">
+            <button class="btn-family-photo" onclick="triggerCameraForFamily('img-preview-ceramica')">
+              📷 Foto Evidencia: Cerámica
+            </button>
+            <img id="img-preview-ceramica" class="family-preview-img" alt="Foto Cerámica">
+          </div>
+        </div>
+      </div>
+
+      <!-- FAMILIA 2: Adhesivos y Pegamentos -->
+      <div class="family-card" id="card-adhesivos">
+        <div class="family-header" onclick="toggleCard('card-adhesivos')">
+          <div class="family-title"><span>🏗️</span> Adhesivos y Complementos</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="family-status" id="status-adhesivos">Pendiente</span>
+            <span class="icon-arrow">▼</span>
+          </div>
+        </div>
+        <div class="family-body">
+          <div class="check-item">
+            <span class="item-label">Área de adhesivos ordenada y limpia</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-adhesivos')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Precios y viñetas visibles en estiba</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-adhesivos')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Solicitud de stock de reposición</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-adhesivos')"><span class="slider"></span></label>
+          </div>
+
+          <!-- Módulo Fotográfico de Adhesivos -->
+          <div class="family-photo-box">
+            <button class="btn-family-photo" onclick="triggerCameraForFamily('img-preview-adhesivos')">
+              📷 Foto Evidencia: Adhesivos
+            </button>
+            <img id="img-preview-adhesivos" class="family-preview-img" alt="Foto Adhesivos">
+          </div>
+        </div>
+      </div>
+
+      <!-- FAMILIA 3: Piedra Sinterizada y Mallas -->
+      <div class="family-card" id="card-sinterizada">
+        <div class="family-header" onclick="toggleCard('card-sinterizada')">
+          <div class="family-title"><span>🪨</span> Piedra Sinterizada y Mallas</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="family-status" id="status-sinterizada">Pendiente</span>
+            <span class="icon-arrow">▼</span>
+          </div>
+        </div>
+        <div class="family-body">
+          <div class="check-item">
+            <span class="item-label">Control y limpieza de exhibidores de mallas</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-sinterizada')"><span class="slider"></span></label>
+          </div>
+          <div class="check-item">
+            <span class="item-label">Exhibidores de Rubí y Fila organizados</span>
+            <label class="switch"><input type="checkbox" class="chk-item" onchange="updateCardStatus('card-sinterizada')"><span class="slider"></span></label>
+          </div>
+
+          <!-- Módulo Fotográfico de Piedra Sinterizada -->
+          <div class="family-photo-box">
+            <button class="btn-family-photo" onclick="triggerCameraForFamily('img-preview-sinterizada')">
+              📷 Foto Evidencia: Piedra Sinterizada
+            </button>
+            <img id="img-preview-sinterizada" class="family-preview-img" alt="Foto Sinterizada">
+          </div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <span class="section-label">Observaciones Generales</span>
+      <div class="family-card" style="padding:14px;">
+        <input type="text" class="input-obs" id="obsInput" placeholder="Detalles de piezas dañadas o pendientes...">
+      </div>
+
+      <button class="btn-submit" onclick="submitForm()">
+        Enviar Bitácora Completa
+      </button>
+
+      <div class="status-msg" id="statusMsg">✓ Bitácora enviada con éxito a la Jefatura.</div>
+
+    </main>
+  </div>
+
+  <nav class="nav-bar">
+    <div class="nav-item"><span class="nav-icon">🏠</span>Inicio</div>
+    <div class="nav-item active"><span class="nav-icon">📷</span>Bitácora</div>
+    <div class="nav-item"><span class="nav-icon">📊</span>Reportes</div>
+  </nav>
+
+  <script>
+    let activePreviewTargetId = null;
+
+    // Abrir/Cerrar Tarjetas
+    function toggleCard(id) {
+      const card = document.getElementById(id);
+      card.classList.toggle('open');
+    }
+
+    // Actualizar Estado de Checklist
+    function updateCardStatus(cardId) {
+      const card = document.getElementById(cardId);
+      const checkboxes = card.querySelectorAll('.chk-item');
+      const statusSpan = card.querySelector('.family-status');
+      
+      let allChecked = true;
+      checkboxes.forEach(cb => { if(!cb.checked) allChecked = false; });
+
+      if(allChecked) {
+        statusSpan.innerText = '✓ Completo';
+        statusSpan.style.background = '#D1FAE5';
+        statusSpan.style.color = '#065F46';
+      } else {
+        statusSpan.innerText = 'Pendiente';
+        statusSpan.style.background = '#F1F5F9';
+        statusSpan.style.color = '#64748B';
+      }
+    }
+
+    // Activar Cámara Reutilizable para la Familia Seleccionada
+    function triggerCameraForFamily(targetImgId) {
+      activePreviewTargetId = targetImgId;
+      const cameraInput = document.getElementById('dynamicCameraInput');
+      cameraInput.click();
+    }
+
+    // Procesar la Imagen Capturada y Asignarla a su Tarjeta Correspondiente
+    document.getElementById('dynamicCameraInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file && activePreviewTargetId) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const imgElement = document.getElementById(activePreviewTargetId);
+          imgElement.src = event.target.result;
+          imgElement.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Botón 1-Tap para Aprobar Todo
+    function checkAllTrue() {
+      const checkboxes = document.querySelectorAll('.chk-item');
+      checkboxes.forEach(cb => cb.checked = true);
+
+      ['card-ceramica', 'card-adhesivos', 'card-sinterizada'].forEach(id => {
+        updateCardStatus(id);
+      });
+    }
+
+    function submitForm() {
+      const msg = document.getElementById('statusMsg');
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 4000);
+    }
+  </script>
+
+</body>
+</html>
