@@ -1,93 +1,356 @@
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samboro - Bitácora de Exhibición</title>
+  <style>
+    :root {
+      --primary: #0F172A;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --border: #CBD5E1;
+      --accent: #10B981;
+      --danger: #EF4444;
+    }
 
-    // 1. ACCIÓN: REGISTRO MASIVO DE SUBFAMILIAS
-    if (data.action === "guardarBitacoraMasiva") {
-      var sheetBitacora = ss.getSheetByName("BITACORA") || ss.insertSheet("BITACORA");
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .user-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-info h2 { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
+    .user-info p { font-size: 0.8rem; color: #64748B; margin-top: 2px; }
+
+    .btn-logout {
+      background: #F1F5F9;
+      color: var(--danger);
+      border: 1px solid #FECDD3;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Secciones por Familia */
+    .family-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .family-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .criterio-box {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .criterio-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .options-group {
+      display: flex;
+      gap: 16px;
+    }
+
+    .options-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      resize: vertical;
+    }
+
+    .file-container {
+      border: 1px dashed var(--border);
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      background: #FFFFFF;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: #64748B;
+    }
+
+    .preview-img {
+      max-width: 100%;
+      max-height: 120px;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: none;
+      object-fit: cover;
+    }
+
+    .btn-submit {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status-msg {
+      font-size: 0.9rem;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+    }
+    .status-msg.success { color: var(--accent); }
+    .status-msg.error { color: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div class="user-card">
+      <div class="user-info">
+        <h2 id="txtTienda">Cargando...</h2>
+        <p><span id="txtUsuario">--</span> | <span id="txtRol">--</span></p>
+      </div>
+      <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+    </div>
+
+    <form id="bitacoraForm" style="display: flex; flex-direction: column; gap: 16px;">
       
-      // Encabezados con Criterios de Exhibición integrados
-      if (sheetBitacora.getLastRow() === 0) {
-        sheetBitacora.appendRow([
-          "Fecha / Hora", 
-          "Usuario", 
-          "Correo", 
-          "Tienda", 
-          "Subfamilia", 
-          "Exhibidor Limpio (C1)", 
-          "Precios Visibles (C2)", 
-          "Muestras Completas (C3)", 
-          "Observación / Hallazgo", 
-          "Imagen_URL"
-        ]);
+      <!-- Se generará dinámicamente un bloque por cada subfamilia -->
+      <div id="dynamicFamiliesContainer" style="display: flex; flex-direction: column; gap: 16px;"></div>
+
+      <button type="submit" class="btn-submit" id="btnSubmit">Enviar Evaluación Completa</button>
+      <div class="status-msg" id="statusMsg"></div>
+
+    </form>
+
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRpTmQAVHsZsWtVGFpG1FOzcz0wbJxV6y8qgYCNNq0HC10_XWrnCdFH0gFw1Hb-yuY/exec";
+    
+    // Lista fija de criterios
+    const CRITERIOS = [
+      "1. ¿Exhibidor limpio y en buen estado?",
+      "2. ¿Precios y rotulación visibles y correctos?",
+      "3. ¿Muestras completas y bien colocadas?"
+    ];
+
+    const fotosBase64 = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const usuarioGuardado = localStorage.getItem('usuarioSamboro');
+      if (!usuarioGuardado) {
+        window.location.href = 'index.html';
+        return;
       }
 
-      var folderName = "Fotos_Bitacora_Samboro";
-      var folder = DriveApp.getFoldersByName(folderName);
-      var targetFolder = folder.hasNext() ? folder.next() : DriveApp.createFolder(folderName);
+      const usuario = JSON.parse(usuarioGuardado);
+      document.getElementById('txtTienda').innerText = usuario.tienda || "Samboro";
+      document.getElementById('txtUsuario').innerText = usuario.codigo;
+      document.getElementById('txtRol').innerText = usuario.rol;
 
-      // Recorrer y guardar subfamilia por subfamilia
-      data.evaluaciones.forEach(function(item) {
-        var imagenUrl = "";
+      // Generar dinámicamente bloques por cada subfamilia asignada
+      const container = document.getElementById('dynamicFamiliesContainer');
+      const subfamilias = usuario.subfamilias ? usuario.subfamilias.split(', ') : [];
+
+      if (subfamilias.length === 0) {
+        container.innerHTML = "<p style='text-align:center;'>No tienes subfamilias asignadas.</p>";
+        document.getElementById('btnSubmit').style.display = 'none';
+        return;
+      }
+
+      subfamilias.forEach((sub, subIdx) => {
+        const subName = sub.trim();
+        const card = document.createElement('div');
+        card.className = 'family-card';
         
-        if (item.fotoBase64) {
-          var blob = Utilities.newBlob(
-            Utilities.base64Decode(item.fotoBase64), 
-            "image/jpeg", 
-            "Foto_" + data.usuario + "_" + item.subfamilia.replace(/ /g, "_") + "_" + new Date().getTime() + ".jpg"
-          );
-          var file = targetFolder.createFile(blob);
-          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-          imagenUrl = file.getUrl();
-        }
+        let htmlCriterios = '';
+        CRITERIOS.forEach((crit, critIdx) => {
+          const fieldName = `criterio_${subIdx}_${critIdx}`;
+          htmlCriterios += `
+            <div class="criterio-box">
+              <span class="criterio-title">${crit}</span>
+              <div class="options-group">
+                <label><input type="radio" name="${fieldName}" value="CUMPLE" required> Cumple</label>
+                <label><input type="radio" name="${fieldName}" value="NO CUMPLE" required> No Cumple</label>
+              </div>
+            </div>
+          `;
+        });
 
-        sheetBitacora.appendRow([
-          new Date(),
-          data.usuario,
-          data.correo,
-          data.tienda,
-          item.subfamilia,
-          item.criterio1,
-          item.criterio2,
-          item.criterio3,
-          item.observacion,
-          imagenUrl
-        ]);
+        card.innerHTML = `
+          <div class="family-title">📌 Subfamilia: ${subName}</div>
+          ${htmlCriterios}
+          <div class="form-group">
+            <label style="font-size:0.8rem; font-weight:700;">Observación / Hallazgo (${subName})</label>
+            <textarea id="obs_${subIdx}" rows="2" placeholder="Detalle adicional sobre ${subName}..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label style="font-size:0.8rem; font-weight:700;">Evidencia Fotográfica (${subName})</label>
+            <div class="file-container" onclick="document.getElementById('foto_${subIdx}').click()">
+              <span id="label_foto_${subIdx}">📷 Subir / Tomar foto para ${subName}</span>
+              <input type="file" id="foto_${subIdx}" accept="image/*" capture="environment" style="display:none;" onchange="convertirFoto(${subIdx})">
+              <img id="prev_${subIdx}" class="preview-img" alt="Vista previa">
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    });
+
+    // Función para procesar fotografías individualmente
+    window.convertirFoto = function(subIdx) {
+      const fileInput = document.getElementById(`foto_${subIdx}`);
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          fotosBase64[subIdx] = evt.target.result.split(',')[1];
+          const imgPreview = document.getElementById(`prev_${subIdx}`);
+          imgPreview.src = evt.target.result;
+          imgPreview.style.display = 'block';
+          document.getElementById(`label_foto_${subIdx}`).innerText = "Cambiar fotografía";
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    // Envío único con todas las subfamilias evaluadas
+    document.getElementById('bitacoraForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const usuario = JSON.parse(localStorage.getItem('usuarioSamboro'));
+      const subfamilias = usuario.subfamilias ? usuario.subfamilias.split(', ') : [];
+      const evaluaciones = [];
+
+      // Recopilar datos de cada subfamilia obligatoriamente
+      subfamilias.forEach((sub, subIdx) => {
+        const subName = sub.trim();
+        const evalSub = {
+          subfamilia: subName,
+          criterio1: document.querySelector(`input[name="criterio_${subIdx}_0"]:checked`).value,
+          criterio2: document.querySelector(`input[name="criterio_${subIdx}_1"]:checked`).value,
+          criterio3: document.querySelector(`input[name="criterio_${subIdx}_2"]:checked`).value,
+          observacion: document.getElementById(`obs_${subIdx}`).value.trim(),
+          fotoBase64: fotosBase64[subIdx] || ""
+        };
+        evaluaciones.push(evalSub);
       });
 
-      return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Todas las subfamilias registradas." }))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
+      const btnSubmit = document.getElementById('btnSubmit');
+      const statusMsg = document.getElementById('statusMsg');
 
-    // 2. ACCIÓN: LOGIN DE USUARIOS
-    var codigoIngresado = String(data.codigo).trim().toUpperCase();
-    var sheetAsesores = ss.getSheetByName("ASESORES");
-    var datos = sheetAsesores.getDataRange().getValues();
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = "Guardando todas las evaluaciones...";
+      statusMsg.style.display = 'none';
 
-    for (var i = 1; i < datos.length; i++) {
-      var codigoBD = String(datos[i][0]).trim().toUpperCase();
-      if (codigoBD === codigoIngresado) {
-        var respuesta = {
-          success: true,
-          usuario: {
-            codigo: datos[i][0],
-            correo: datos[i][1],
-            rol: datos[i][2],
-            tienda: datos[i][3],
-            subfamilias: datos[i][4]
-          }
-        };
-        return ContentService.createTextOutput(JSON.stringify(respuesta))
-                             .setMimeType(ContentService.MimeType.JSON);
-      }
-    }
+      const payload = {
+        action: "guardarBitacoraMasiva",
+        usuario: usuario.codigo,
+        correo: usuario.correo,
+        tienda: usuario.tienda,
+        evaluaciones: evaluaciones
+      };
 
-    return ContentService.createTextOutput(JSON.stringify({ success: false, message: "Código no encontrado." }))
-                         .setMimeType(ContentService.MimeType.JSON);
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = "Enviar Evaluación Completa";
 
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, message: "Error: " + error.toString() }))
-                         .setMimeType(ContentService.MimeType.JSON);
-  }
-}
+        if (data.success) {
+          statusMsg.className = "status-msg success";
+          statusMsg.innerText = "¡Se evaluaron correctamente todas las subfamilias!";
+          statusMsg.style.display = 'block';
+          
+          document.getElementById('bitacoraForm').reset();
+          document.querySelectorAll('.preview-img').forEach(img => img.style.display = 'none');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          statusMsg.className = "status-msg error";
+          statusMsg.innerText = data.message || "Error al guardar el registro.";
+          statusMsg.style.display = 'block';
+        }
+      })
+      .catch(err => {
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = "Enviar Evaluación Completa";
+        statusMsg.className = "status-msg error";
+        statusMsg.innerText = "Error de conexión con el servidor.";
+        statusMsg.style.display = 'block';
+      });
+    });
+
+    // Cerrar sesión
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      localStorage.removeItem('usuarioSamboro');
+      window.location.href = 'index.html';
+    });
+  </script>
+
+</body>
+</html>
