@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Samboro - Bitácora de Sala de Ventas</title>
+  <title>Samboro - Control Unificado de Sala de Ventas</title>
   <style>
     :root {
       --primary: #0F172A;
@@ -72,12 +72,17 @@
       font-weight: 600;
     }
 
-    /* Selector de Múltiples Áreas Asignadas */
-    .area-selector-container {
-      padding: 16px 20px 0 20px;
+    /* Panel de Resumen de Áreas Asignadas */
+    .summary-card {
+      margin: 16px 20px 0 20px;
+      padding: 14px 16px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
-    .section-title-sm {
+    .summary-header {
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
@@ -86,32 +91,22 @@
       margin-bottom: 8px;
     }
 
-    .area-chips {
+    .tags-container {
       display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    .chip {
-      background: white;
-      border: 1px solid var(--border);
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
+    .tag {
+      background: #E2E8F0;
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
       font-weight: 600;
-      white-space: nowrap;
-      color: var(--text-muted);
-      cursor: pointer;
     }
 
-    .chip.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    /* Tarjeta de Aprobación Rápida en Lote */
+    /* Botón Rápido en Lote */
     .quick-batch-card {
       margin: 12px 20px 0 20px;
       padding: 12px 16px;
@@ -134,12 +129,13 @@
       background: var(--accent-green);
       color: white;
       border: none;
-      padding: 8px 14px;
+      padding: 10px 16px;
       border-radius: 8px;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
     }
 
     /* Visor de Cámara Novedoso */
@@ -355,29 +351,28 @@
 <body>
 
   <div class="app-container">
-    <!-- Header principal vinculado al usuario de la matriz -->
+    <!-- Header principal -->
     <header class="header">
       <div class="header-info">
         <h1>Samboro · Zona 7</h1>
         <p>Control de Lunes (Canal Tiendas)</p>
       </div>
-      <div class="user-badge" id="userBadge">EMURALLES</div>
+      <div class="user-badge">EMURALLES</div>
     </header>
 
-    <!-- Selector de Áreas del Asesor (Multiselección) -->
-    <div class="area-selector-container">
-      <div class="section-title-sm">Mis Áreas Asignadas Hoy:</div>
-      <div class="area-chips">
-        <button class="chip active" onclick="filterArea(this, 'Todas')">Todas (3)</button>
-        <button class="chip" onclick="filterArea(this, 'Cerámica Importada')">Cerámica Importada</button>
-        <button class="chip" onclick="filterArea(this, 'Adhesivos')">Adhesivos</button>
-        <button class="chip" onclick="filterArea(this, 'Piedra Sinterizada')">Piedra Sinterizada</button>
+    <!-- Resumen Informativo de Familias Asignadas -->
+    <div class="summary-card">
+      <div class="summary-header">Mis Familias Asignadas Hoy:</div>
+      <div class="tags-container">
+        <span class="tag">Cerámica Importada</span>
+        <span class="tag">Adhesivos</span>
+        <span class="tag">Piedra Sinterizada</span>
       </div>
     </div>
 
-    <!-- Botón Rápido en Lote -->
+    <!-- Botón Rápido en Lote (Marca todas las secciones en una sola pantalla) -->
     <div class="quick-batch-card">
-      <span>¿Todo limpio y ordenado en tus áreas?</span>
+      <span>¿Todo en orden en tus familias?</span>
       <button class="btn-batch-ok" onclick="checkAllTrue()">✓ Marcar Todo OK</button>
     </div>
 
@@ -385,10 +380,10 @@
     <div class="viewfinder">
       <img id="photoPreview" src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80" alt="Exhibidor">
       <div class="viewfinder-overlay"></div>
-      <div class="badge-zone" id="areaBadge">Área Visible: Vista General de Áreas</div>
+      <div class="badge-zone">Evidencia General de Familias</div>
     </div>
 
-    <!-- Checklist Unificado (Políticas Samboro) -->
+    <!-- Checklist Unificado en Pantalla Única (Políticas Samboro) -->
     <main class="content">
 
       <!-- 1. Exhibiciones Generales -->
@@ -519,20 +514,10 @@
       }
     });
 
-    // Función 1-Tap para aprobar todas las normas de un solo clic
+    // Función 1-Tap para activar todos los switches en un solo clic
     function checkAllTrue() {
       const checkboxes = document.querySelectorAll('.chk-item');
       checkboxes.forEach(cb => cb.checked = true);
-    }
-
-    // Filtrar/Cambiar Vista entre Áreas Asignadas
-    function filterArea(element, areaName) {
-      const chips = document.querySelectorAll('.chip');
-      chips.forEach(c => c.classList.remove('active'));
-      element.classList.add('active');
-      
-      const areaBadge = document.getElementById('areaBadge');
-      areaBadge.innerText = 'Área Visible: ' + areaName;
     }
 
     // Confirmación al Enviar
