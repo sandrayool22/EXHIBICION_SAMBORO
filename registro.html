@@ -1,297 +1,93 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Samboro - Bitácora de Exhibición</title>
-  <style>
-    :root {
-      --primary: #0F172A;
-      --bg: #F8FAFC;
-      --card-bg: #FFFFFF;
-      --text: #1E293B;
-      --border: #E2E8F0;
-      --accent: #10B981;
-      --danger: #EF4444;
-    }
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* Card de Usuario */
-    .user-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .user-info h2 { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
-    .user-info p { font-size: 0.8rem; color: #64748B; margin-top: 2px; }
-
-    .btn-logout {
-      background: #F1F5F9;
-      color: var(--danger);
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* Formulario */
-    .form-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    label { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
-
-    select, input[type="text"], textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.9rem;
-      outline: none;
-    }
-
-    select:focus, input:focus, textarea:focus { border-color: var(--primary); }
-
-    /* File Input / Vista previa */
-    .file-container {
-      border: 2px dashed var(--border);
-      padding: 16px;
-      border-radius: 8px;
-      text-align: center;
-      background: #FAFAFA;
-      cursor: pointer;
-    }
-
-    .file-container input { display: none; }
-    .file-label { font-size: 0.85rem; color: #64748B; font-weight: 600; cursor: pointer; }
-
-    #previewImg {
-      max-width: 100%;
-      max-height: 180px;
-      border-radius: 6px;
-      margin-top: 10px;
-      display: none;
-      object-fit: cover;
-    }
-
-    .btn-submit {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .status-msg {
-      font-size: 0.85rem;
-      text-align: center;
-      font-weight: 600;
-      display: none;
-    }
-    .status-msg.success { color: var(--accent); }
-    .status-msg.error { color: var(--danger); }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    
-    <!-- Encabezado con datos del Usuario -->
-    <div class="user-card">
-      <div class="user-info">
-        <h2 id="txtTienda">Cargando...</h2>
-        <p><span id="txtUsuario">--</span> | <span id="txtRol">--</span></p>
-      </div>
-      <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
-    </div>
-
-    <!-- Formulario de Registro -->
-    <form class="form-card" id="bitacoraForm">
+    // 1. ACCIÓN: REGISTRO MASIVO DE SUBFAMILIAS
+    if (data.action === "guardarBitacoraMasiva") {
+      var sheetBitacora = ss.getSheetByName("BITACORA") || ss.insertSheet("BITACORA");
       
-      <div class="form-group">
-        <label for="subfamilia">Subfamilia Evaluada</label>
-        <select id="subfamilia" required>
-          <option value="">-- Seleccionar --</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="hallazgo">Hallazgo / Observación</label>
-        <textarea id="hallazgo" rows="3" placeholder="Describe el detalle o anomalía encontrada..." required></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Fotografía de Evidencia</label>
-        <div class="file-container" onclick="document.getElementById('foto').click()">
-          <span class="file-label" id="fileText">📷 Haz clic para tomar o subir foto</span>
-          <input type="file" id="foto" accept="image/*" capture="environment">
-          <img id="previewImg" alt="Vista previa">
-        </div>
-      </div>
-
-      <button type="submit" class="btn-submit" id="btnSubmit">Enviar Registro</button>
-      <div class="status-msg" id="statusMsg"></div>
-
-    </form>
-
-  </div>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRpTmQAVHsZsWtVGFpG1FOzcz0wbJxV6y8qgYCNNq0HC10_XWrnCdFH0gFw1Hb-yuY/exec";
-    let base64Foto = "";
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const usuarioGuardado = localStorage.getItem('usuarioSamboro');
-
-      // Redirige al Login si no hay datos guardados
-      if (!usuarioGuardado) {
-        window.location.href = 'index.html';
-        return;
+      // Encabezados con Criterios de Exhibición integrados
+      if (sheetBitacora.getLastRow() === 0) {
+        sheetBitacora.appendRow([
+          "Fecha / Hora", 
+          "Usuario", 
+          "Correo", 
+          "Tienda", 
+          "Subfamilia", 
+          "Exhibidor Limpio (C1)", 
+          "Precios Visibles (C2)", 
+          "Muestras Completas (C3)", 
+          "Observación / Hallazgo", 
+          "Imagen_URL"
+        ]);
       }
 
-      const usuario = JSON.parse(usuarioGuardado);
+      var folderName = "Fotos_Bitacora_Samboro";
+      var folder = DriveApp.getFoldersByName(folderName);
+      var targetFolder = folder.hasNext() ? folder.next() : DriveApp.createFolder(folderName);
 
-      // Cargar datos en la vista
-      document.getElementById('txtTienda').innerText = usuario.tienda || "Samboro";
-      document.getElementById('txtUsuario').innerText = usuario.codigo;
-      document.getElementById('txtRol').innerText = usuario.rol;
-
-      // Cargar subfamilias asignadas en el <select>
-      const selectSubfamilia = document.getElementById('subfamilia');
-      if (usuario.subfamilias) {
-        const lista = usuario.subfamilias.split(', ');
-        lista.forEach(sub => {
-          const opt = document.createElement('option');
-          opt.value = sub.trim();
-          opt.innerText = sub.trim();
-          selectSubfamilia.appendChild(opt);
-        });
-      }
-    });
-
-    // Vista previa y conversión de imagen a Base64
-    document.getElementById('foto').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          base64Foto = evt.target.result.split(',')[1];
-          const imgPreview = document.getElementById('previewImg');
-          imgPreview.src = evt.target.result;
-          imgPreview.style.display = 'block';
-          document.getElementById('fileText').innerText = "Cambiar imagen";
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // Envío del Formulario
-    document.getElementById('bitacoraForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const usuario = JSON.parse(localStorage.getItem('usuarioSamboro'));
-      const btnSubmit = document.getElementById('btnSubmit');
-      const statusMsg = document.getElementById('statusMsg');
-
-      btnSubmit.disabled = true;
-      btnSubmit.innerText = "Guardando...";
-      statusMsg.style.display = 'none';
-
-      const payload = {
-        action: "guardarBitacora",
-        usuario: usuario.codigo,
-        correo: usuario.correo,
-        tienda: usuario.tienda,
-        subfamilia: document.getElementById('subfamilia').value,
-        hallazgo: document.getElementById('hallazgo').value,
-        fotoBase64: base64Foto
-      };
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => {
-        btnSubmit.disabled = false;
-        btnSubmit.innerText = "Enviar Registro";
-
-        if (data.success) {
-          statusMsg.className = "status-msg success";
-          statusMsg.innerText = "¡Registro guardado correctamente!";
-          statusMsg.style.display = 'block';
-          
-          // Limpiar Formulario
-          document.getElementById('bitacoraForm').reset();
-          document.getElementById('previewImg').style.display = 'none';
-          document.getElementById('fileText').innerText = "📷 Haz clic para tomar o subir foto";
-          base64Foto = "";
-        } else {
-          statusMsg.className = "status-msg error";
-          statusMsg.innerText = data.message || "Error al guardar registro.";
-          statusMsg.style.display = 'block';
+      // Recorrer y guardar subfamilia por subfamilia
+      data.evaluaciones.forEach(function(item) {
+        var imagenUrl = "";
+        
+        if (item.fotoBase64) {
+          var blob = Utilities.newBlob(
+            Utilities.base64Decode(item.fotoBase64), 
+            "image/jpeg", 
+            "Foto_" + data.usuario + "_" + item.subfamilia.replace(/ /g, "_") + "_" + new Date().getTime() + ".jpg"
+          );
+          var file = targetFolder.createFile(blob);
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          imagenUrl = file.getUrl();
         }
-      })
-      .catch(err => {
-        btnSubmit.disabled = false;
-        btnSubmit.innerText = "Enviar Registro";
-        statusMsg.className = "status-msg error";
-        statusMsg.innerText = "Error de conexión con el servidor.";
-        statusMsg.style.display = 'block';
+
+        sheetBitacora.appendRow([
+          new Date(),
+          data.usuario,
+          data.correo,
+          data.tienda,
+          item.subfamilia,
+          item.criterio1,
+          item.criterio2,
+          item.criterio3,
+          item.observacion,
+          imagenUrl
+        ]);
       });
-    });
 
-    // Cerrar Sesión
-    document.getElementById('btnLogout').addEventListener('click', () => {
-      localStorage.removeItem('usuarioSamboro');
-      window.location.href = 'index.html';
-    });
-  </script>
+      return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Todas las subfamilias registradas." }))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
 
-</body>
-</html>
+    // 2. ACCIÓN: LOGIN DE USUARIOS
+    var codigoIngresado = String(data.codigo).trim().toUpperCase();
+    var sheetAsesores = ss.getSheetByName("ASESORES");
+    var datos = sheetAsesores.getDataRange().getValues();
+
+    for (var i = 1; i < datos.length; i++) {
+      var codigoBD = String(datos[i][0]).trim().toUpperCase();
+      if (codigoBD === codigoIngresado) {
+        var respuesta = {
+          success: true,
+          usuario: {
+            codigo: datos[i][0],
+            correo: datos[i][1],
+            rol: datos[i][2],
+            tienda: datos[i][3],
+            subfamilias: datos[i][4]
+          }
+        };
+        return ContentService.createTextOutput(JSON.stringify(respuesta))
+                             .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: "Código no encontrado." }))
+                         .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: "Error: " + error.toString() }))
+                         .setMimeType(ContentService.MimeType.JSON);
+  }
+}
