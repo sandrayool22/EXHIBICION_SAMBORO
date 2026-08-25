@@ -1,193 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Samboro - Bitácora de Exhibición</title>
-  <style>
-    :root {
-      --primary: #0F172A;
-      --bg: #F8FAFC;
-      --card-bg: #FFFFFF;
-      --text: #1E293B;
-      --border: #CBD5E1;
-      --accent: #10B981;
-      --danger: #EF4444;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .user-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .user-info h2 { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
-    .user-info p { font-size: 0.8rem; color: #64748B; margin-top: 2px; }
-
-    .btn-logout {
-      background: #F1F5F9;
-      color: var(--danger);
-      border: 1px solid #FECDD3;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* Secciones por Familia */
-    .family-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .family-title {
-      font-size: 1rem;
-      font-weight: 800;
-      color: var(--primary);
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 8px;
-    }
-
-    .criterio-box {
-      background: #F8FAFC;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .criterio-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #334155;
-    }
-
-    .options-group {
-      display: flex;
-      gap: 16px;
-    }
-
-    .options-group label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.85rem;
-      outline: none;
-      resize: vertical;
-    }
-
-    .file-container {
-      border: 1px dashed var(--border);
-      padding: 10px;
-      border-radius: 8px;
-      text-align: center;
-      background: #FFFFFF;
-      cursor: pointer;
-      font-size: 0.8rem;
-      color: #64748B;
-    }
-
-    .preview-img {
-      max-width: 100%;
-      max-height: 120px;
-      border-radius: 6px;
-      margin-top: 8px;
-      display: none;
-      object-fit: cover;
-    }
-
-    .btn-submit {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .status-msg {
-      font-size: 0.9rem;
-      text-align: center;
-      font-weight: 600;
-      display: none;
-    }
-    .status-msg.success { color: var(--accent); }
-    .status-msg.error { color: var(--danger); }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    
-    <div class="user-card">
-      <div class="user-info">
-        <h2 id="txtTienda">Cargando...</h2>
-        <p><span id="txtUsuario">--</span> | <span id="txtRol">--</span></p>
-      </div>
-      <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
-    </div>
-
-    <form id="bitacoraForm" style="display: flex; flex-direction: column; gap: 16px;">
-      
-      <!-- Se generará dinámicamente un bloque por cada subfamilia -->
-      <div id="dynamicFamiliesContainer" style="display: flex; flex-direction: column; gap: 16px;"></div>
-
-      <button type="submit" class="btn-submit" id="btnSubmit">Enviar Evaluación Completa</button>
-      <div class="status-msg" id="statusMsg"></div>
-
-    </form>
-
-  </div>
-
-  <script>
+<script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRpTmQAVHsZsWtVGFpG1FOzcz0wbJxV6y8qgYCNNq0HC10_XWrnCdFH0gFw1Hb-yuY/exec";
     
-    // Lista fija de criterios
     const CRITERIOS = [
       "1. ¿Exhibidor limpio y en buen estado?",
       "2. ¿Precios y rotulación visibles y correctos?",
@@ -208,9 +21,8 @@
       document.getElementById('txtUsuario').innerText = usuario.codigo;
       document.getElementById('txtRol').innerText = usuario.rol;
 
-      // Generar dinámicamente bloques por cada subfamilia asignada
       const container = document.getElementById('dynamicFamiliesContainer');
-      const subfamilias = usuario.subfamilias ? usuario.subfamilias.split(', ') : [];
+      const subfamilias = usuario.subfamilias ? usuario.subfamilias.split(',') : [];
 
       if (subfamilias.length === 0) {
         container.innerHTML = "<p style='text-align:center;'>No tienes subfamilias asignadas.</p>";
@@ -257,50 +69,63 @@
       });
     });
 
-    // Función para procesar fotografías individualmente
+    // Procesa y comprime la foto para evitar sobrecargar la petición HTTP
     window.convertirFoto = function(subIdx) {
       const fileInput = document.getElementById(`foto_${subIdx}`);
       const file = fileInput.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = function(evt) {
-          fotosBase64[subIdx] = evt.target.result.split(',')[1];
-          const imgPreview = document.getElementById(`prev_${subIdx}`);
-          imgPreview.src = evt.target.result;
-          imgPreview.style.display = 'block';
-          document.getElementById(`label_foto_${subIdx}`).innerText = "Cambiar fotografía";
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const scaleFactor = MAX_WIDTH / img.width;
+            
+            canvas.width = (img.width > MAX_WIDTH) ? MAX_WIDTH : img.width;
+            canvas.height = (img.width > MAX_WIDTH) ? img.height * scaleFactor : img.height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            fotosBase64[subIdx] = dataUrl.split(',')[1];
+
+            const imgPreview = document.getElementById(`prev_${subIdx}`);
+            imgPreview.src = dataUrl;
+            imgPreview.style.display = 'block';
+            document.getElementById(`label_foto_${subIdx}`).innerText = "Cambiar fotografía";
+          };
+          img.src = e.target.result;
         };
         reader.readAsDataURL(file);
       }
     };
 
-    // Envío único con todas las subfamilias evaluadas
     document.getElementById('bitacoraForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
       const usuario = JSON.parse(localStorage.getItem('usuarioSamboro'));
-      const subfamilias = usuario.subfamilias ? usuario.subfamilias.split(', ') : [];
+      const subfamilias = usuario.subfamilias ? usuario.subfamilias.split(',') : [];
       const evaluaciones = [];
 
-      // Recopilar datos de cada subfamilia obligatoriamente
       subfamilias.forEach((sub, subIdx) => {
         const subName = sub.trim();
-        const evalSub = {
+        evaluaciones.push({
           subfamilia: subName,
           criterio1: document.querySelector(`input[name="criterio_${subIdx}_0"]:checked`).value,
           criterio2: document.querySelector(`input[name="criterio_${subIdx}_1"]:checked`).value,
           criterio3: document.querySelector(`input[name="criterio_${subIdx}_2"]:checked`).value,
           observacion: document.getElementById(`obs_${subIdx}`).value.trim(),
           fotoBase64: fotosBase64[subIdx] || ""
-        };
-        evaluaciones.push(evalSub);
+        });
       });
 
       const btnSubmit = document.getElementById('btnSubmit');
       const statusMsg = document.getElementById('statusMsg');
 
       btnSubmit.disabled = true;
-      btnSubmit.innerText = "Guardando todas las evaluaciones...";
+      btnSubmit.innerText = "Guardando...";
       statusMsg.style.display = 'none';
 
       const payload = {
@@ -311,10 +136,9 @@
         evaluaciones: evaluaciones
       };
 
+      // Envío usando FormData evita bloqueos CORS y fallos de lectura en Apps Script
       fetch(SCRIPT_URL, {
         method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
@@ -324,7 +148,7 @@
 
         if (data.success) {
           statusMsg.className = "status-msg success";
-          statusMsg.innerText = "¡Se evaluaron correctamente todas las subfamilias!";
+          statusMsg.innerText = "¡Evaluación guardada con éxito!";
           statusMsg.style.display = 'block';
           
           document.getElementById('bitacoraForm').reset();
@@ -332,7 +156,7 @@
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           statusMsg.className = "status-msg error";
-          statusMsg.innerText = data.message || "Error al guardar el registro.";
+          statusMsg.innerText = data.message || "Error al guardar.";
           statusMsg.style.display = 'block';
         }
       })
@@ -340,17 +164,13 @@
         btnSubmit.disabled = false;
         btnSubmit.innerText = "Enviar Evaluación Completa";
         statusMsg.className = "status-msg error";
-        statusMsg.innerText = "Error de conexión con el servidor.";
+        statusMsg.innerText = "Error de conexión o timeout al enviar imágenes.";
         statusMsg.style.display = 'block';
       });
     });
 
-    // Cerrar sesión
     document.getElementById('btnLogout').addEventListener('click', () => {
       localStorage.removeItem('usuarioSamboro');
       window.location.href = 'index.html';
     });
   </script>
-
-</body>
-</html>
