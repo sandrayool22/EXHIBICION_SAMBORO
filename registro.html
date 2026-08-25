@@ -1,4 +1,188 @@
-<script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samboro - Bitácora de Exhibición</title>
+  <style>
+    :root {
+      --primary: #0F172A;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --border: #CBD5E1;
+      --accent: #10B981;
+      --danger: #EF4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .user-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-info h2 { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
+    .user-info p { font-size: 0.8rem; color: #64748B; margin-top: 2px; }
+
+    .btn-logout {
+      background: #F1F5F9;
+      color: var(--danger);
+      border: 1px solid #FECDD3;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .family-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .family-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .criterio-box {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .criterio-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .options-group {
+      display: flex;
+      gap: 16px;
+    }
+
+    .options-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      resize: vertical;
+    }
+
+    .file-container {
+      border: 1px dashed var(--border);
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      background: #FFFFFF;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: #64748B;
+    }
+
+    .preview-img {
+      max-width: 100%;
+      max-height: 120px;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: none;
+      object-fit: cover;
+    }
+
+    .btn-submit {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status-msg {
+      font-size: 0.9rem;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+    }
+    .status-msg.success { color: var(--accent); }
+    .status-msg.error { color: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div class="user-card">
+      <div class="user-info">
+        <h2 id="txtTienda">Cargando...</h2>
+        <p><span id="txtUsuario">--</span> | <span id="txtRol">--</span></p>
+      </div>
+      <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+    </div>
+
+    <form id="bitacoraForm" style="display: flex; flex-direction: column; gap: 16px;">
+      
+      <div id="dynamicFamiliesContainer" style="display: flex; flex-direction: column; gap: 16px;"></div>
+
+      <button type="submit" class="btn-submit" id="btnSubmit">Enviar Evaluación Completa</button>
+      <div class="status-msg" id="statusMsg"></div>
+
+    </form>
+
+  </div>
+
+  <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRpTmQAVHsZsWtVGFpG1FOzcz0wbJxV6y8qgYCNNq0HC10_XWrnCdFH0gFw1Hb-yuY/exec";
     
     const CRITERIOS = [
@@ -69,7 +253,6 @@
       });
     });
 
-    // Procesa y comprime la foto para evitar sobrecargar la petición HTTP
     window.convertirFoto = function(subIdx) {
       const fileInput = document.getElementById(`foto_${subIdx}`);
       const file = fileInput.files[0];
@@ -136,7 +319,6 @@
         evaluaciones: evaluaciones
       };
 
-      // Envío usando FormData evita bloqueos CORS y fallos de lectura en Apps Script
       fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -164,7 +346,7 @@
         btnSubmit.disabled = false;
         btnSubmit.innerText = "Enviar Evaluación Completa";
         statusMsg.className = "status-msg error";
-        statusMsg.innerText = "Error de conexión o timeout al enviar imágenes.";
+        statusMsg.innerText = "Error de conexión al servidor.";
         statusMsg.style.display = 'block';
       });
     });
@@ -174,3 +356,6 @@
       window.location.href = 'index.html';
     });
   </script>
+
+</body>
+</html>
