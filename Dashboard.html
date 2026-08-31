@@ -1,92 +1,117 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-    <meta charset="utf-8">
-    <title>Dashboard Control de Exhibiciones</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  </head>
-  <body class="bg-slate-900 text-slate-100 min-h-screen p-6">
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Control de Exhibiciones</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
 
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-      <div>
-        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
-          📊 Control de Exhibiciones — Dashboard
-        </h1>
-        <p class="text-slate-400 text-sm mt-1">Seguimiento de cumplimiento por tienda, incidencias pendientes y trazabilidad</p>
-      </div>
-      <button onclick="cargarDatos()" class="mt-4 md:mt-0 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg transition shadow">
-        🔄 Actualizar
-      </button>
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+    <div>
+      <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+        📊 Control de Exhibiciones — Dashboard
+      </h1>
+      <p class="text-slate-400 text-sm mt-1">Seguimiento de cumplimiento por tienda, incidencias pendientes y trazabilidad</p>
     </div>
+    <button onclick="cargarDatos()" class="mt-4 md:mt-0 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
+      🔄 Actualizar
+    </button>
+  </div>
 
-    <!-- 1. CUMPLIMIENTO POR TIENDA -->
-    <h2 class="text-lg font-bold mb-4 text-slate-200">1. Estado de Cumplimiento por Tienda</h2>
-    <div id="gridTiendas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="text-slate-400 col-span-full">Cargando tiendas...</div>
-    </div>
+  <!-- 1. CUMPLIMIENTO POR TIENDA -->
+  <h2 class="text-lg font-bold mb-4 text-slate-200">1. Estado de Cumplimiento por Tienda</h2>
+  <div id="gridTiendas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="text-slate-400 col-span-full py-4 text-center bg-slate-800 rounded-xl border border-slate-700">Cargando tiendas...</div>
+  </div>
 
-    <!-- 3. GRAFICAS Y TRAZABILIDAD -->
-    <h2 class="text-lg font-bold mb-4 text-slate-200">2. Estadísticas de Resolución</h2>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow">
-        <h3 class="text-sm font-bold mb-4 text-slate-300">Cumplimiento General (Global)</h3>
-        <div class="w-60 h-60 mx-auto">
-          <canvas id="chartCumplimiento"></canvas>
-        </div>
-      </div>
-      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow">
-        <h3 class="text-sm font-bold mb-4 text-slate-300">Incidencias Pendientes por Tienda</h3>
-        <div class="h-60">
-          <canvas id="chartIncidenciasTienda"></canvas>
-        </div>
+  <!-- 2. GRAFICAS Y TRAZABILIDAD -->
+  <h2 class="text-lg font-bold mb-4 text-slate-200">2. Estadísticas de Resolución</h2>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow">
+      <h3 class="text-sm font-bold mb-4 text-slate-300">Cumplimiento General (Global)</h3>
+      <div class="w-60 h-60 mx-auto">
+        <canvas id="chartCumplimiento"></canvas>
       </div>
     </div>
-
-    <!-- 2. TABLA DE INCIDENCIAS PENDIENTES (CUMPLE Y NO CUMPLE) -->
-    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow mb-8">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-slate-200">3. Incidencias Pendientes de Resolver</h2>
-        <span id="totalPendientesBadge" class="bg-red-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">0 Pendientes</span>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-700 text-slate-100 uppercase text-xs">
-            <tr>
-              <th class="p-3">Fila</th>
-              <th class="p-3">Fecha</th>
-              <th class="p-3">Tienda</th>
-              <th class="p-3">Asesor</th>
-              <th class="p-3">Subfamilia</th>
-              <th class="p-3">Hallazgos (NO CUMPLE)</th>
-              <th class="p-3">Observación</th>
-              <th class="p-3">Foto</th>
-              <th class="p-3 text-center">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="tablaIncidencias" class="divide-y divide-slate-700">
-            <tr><td colspan="9" class="p-4 text-center text-slate-400">Cargando datos...</td></tr>
-          </tbody>
-        </table>
+    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow">
+      <h3 class="text-sm font-bold mb-4 text-slate-300">Incidencias Pendientes por Tienda</h3>
+      <div class="h-60">
+        <canvas id="chartIncidenciasTienda"></canvas>
       </div>
     </div>
+  </div>
 
-    <script>
-      let chartPie, chartBar;
+  <!-- 3. TABLA DE INCIDENCIAS PENDIENTES -->
+  <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow mb-8">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-bold text-slate-200">3. Incidencias Pendientes de Resolver</h2>
+      <span id="totalPendientesBadge" class="bg-red-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">0 Pendientes</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-700 text-slate-100 uppercase text-xs">
+          <tr>
+            <th class="p-3">Fila</th>
+            <th class="p-3">Fecha</th>
+            <th class="p-3">Tienda</th>
+            <th class="p-3">Asesor</th>
+            <th class="p-3">Subfamilia</th>
+            <th class="p-3">Hallazgos (NO CUMPLE)</th>
+            <th class="p-3">Observación</th>
+            <th class="p-3">Foto</th>
+            <th class="p-3 text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tablaIncidencias" class="divide-y divide-slate-700">
+          <tr><td colspan="9" class="p-4 text-center text-slate-400">Cargando datos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-      document.addEventListener("DOMContentLoaded", cargarDatos);
+  <script>
+    // Configura aquí la URL de tu Web App desplegada en Apps Script
+    const WEB_APP_URL = "TU_WEB_APP_URL_AQUI";
 
-      function cargarDatos() {
-        google.script.run.withSuccessHandler(renderDashboard).obtenerDatosDashboard();
-      }
+    let chartPie, chartBar;
 
-      function renderDashboard(data) {
-        // 1. Render Tarjetas por Tienda
-        const grid = document.getElementById("gridTiendas");
-        grid.innerHTML = "";
+    document.addEventListener("DOMContentLoaded", cargarDatos);
 
+    function cargarDatos() {
+      // Indicadores visuales de carga
+      document.getElementById("gridTiendas").innerHTML = `<div class="text-slate-400 col-span-full py-4 text-center bg-slate-800 rounded-xl border border-slate-700">🔄 Cargando datos del servidor...</div>`;
+      document.getElementById("tablaIncidencias").innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">🔄 Cargando incidencias...</td></tr>`;
+
+      fetch(`${WEB_APP_URL}?action=obtenerDatosDashboard`)
+        .then(response => {
+          if (!response.ok) throw new Error("Error en la respuesta de red");
+          return response.json();
+        })
+        .then(data => {
+          renderDashboard(data);
+        })
+        .catch(err => {
+          console.error("Error al cargar datos:", err);
+          document.getElementById("gridTiendas").innerHTML = `<div class="text-red-400 col-span-full py-4 text-center bg-slate-800 rounded-xl border border-red-500/50">❌ Error al cargar los datos. Verifica la URL de tu Web App.</div>`;
+          document.getElementById("tablaIncidencias").innerHTML = `<tr><td colspan="9" class="p-4 text-center text-red-400">Error al cargar la tabla de incidencias.</td></tr>`;
+        });
+    }
+
+    function renderDashboard(data) {
+      // 1. Render Tarjetas por Tienda
+      const grid = document.getElementById("gridTiendas");
+      grid.innerHTML = "";
+
+      if (!data.resumenTiendas || data.resumenTiendas.length === 0) {
+        grid.innerHTML = `<div class="text-slate-400 col-span-full py-4 text-center bg-slate-800 rounded-xl">No hay tiendas registradas.</div>`;
+      } else {
         data.resumenTiendas.forEach(t => {
           let color = t.totalReportes > 0 ? (t.incidencias === 0 ? "border-emerald-500" : "border-amber-500") : "border-red-500";
           let badge = t.totalReportes > 0 ? (t.incidencias === 0 ? "✅ CUMPLE" : "⚠️ NO CUMPLE") : "❌ SIN REPORTE";
@@ -103,79 +128,117 @@
             </div>
           `;
         });
-
-        // 2. Render Tabla
-        const tbody = document.getElementById("tablaIncidencias");
-        tbody.innerHTML = "";
-        document.getElementById("totalPendientesBadge").innerText = `${data.incidenciasPendientes.length} Pendientes`;
-
-        if (data.incidenciasPendientes.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-emerald-400">🎉 No hay incidencias pendientes.</td></tr>`;
-        } else {
-          data.incidenciasPendientes.forEach(item => {
-            let hallazgos = [];
-            if (item.c1 === "NO CUMPLE") hallazgos.push("Limpieza");
-            if (item.c2 === "NO CUMPLE") hallazgos.push("Precios");
-            if (item.c3 === "NO CUMPLE") hallazgos.push("Muestras");
-
-            let imgBtn = item.imagenUrl ? `<a href="${item.imagenUrl}" target="_blank" class="text-blue-400 underline text-xs">Ver Foto</a>` : "N/A";
-
-            tbody.innerHTML += `
-              <tr class="hover:bg-slate-750 transition">
-                <td class="p-3 text-xs text-slate-400">#${item.fila}</td>
-                <td class="p-3 text-xs">${item.fecha}</td>
-                <td class="p-3 font-semibold text-white">${item.tienda}</td>
-                <td class="p-3 text-xs">${item.asesor}</td>
-                <td class="p-3 text-xs">${item.subfamilia}</td>
-                <td class="p-3 text-xs text-red-400 font-medium">${hallazgos.join(", ")}</td>
-                <td class="p-3 text-xs italic text-slate-400">"${item.observacion}"</td>
-                <td class="p-3 text-xs">${imgBtn}</td>
-                <td class="p-3 text-center">
-                  <button onclick="marcarSolventado(${item.fila})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded transition">
-                    ✓ Solventar
-                  </button>
-                </td>
-              </tr>
-            `;
-          });
-        }
-
-        // 3. Render Charts
-        renderCharts(data);
       }
 
-      function marcarSolventado(fila) {
-        if (confirm(`¿Marcar la fila #${fila} como SOLVENTADA?`)) {
-          google.script.run.withSuccessHandler(function(res) {
-            alert(res);
-            cargarDatos();
-          }).marcarIncidenciaSolventada(fila);
-        }
-      }
+      // 2. Render Tabla
+      const tbody = document.getElementById("tablaIncidencias");
+      tbody.innerHTML = "";
+      const pendientesCount = data.incidenciasPendientes ? data.incidenciasPendientes.length : 0;
+      document.getElementById("totalPendientesBadge").innerText = `${pendientesCount} Pendientes`;
 
-      function renderCharts(data) {
-        const ctxPie = document.getElementById('chartCumplimiento').getContext('2d');
-        if (chartPie) chartPie.destroy();
-        chartPie = new Chart(ctxPie, {
-          type: 'doughnut',
-          data: {
-            labels: ['Cumple', 'No Cumple'],
-            datasets: [{ data: [data.stats.totalCumple, data.stats.totalIncidencias], backgroundColor: ['#10B981', '#EF4444'] }]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
+      if (pendientesCount === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-emerald-400">🎉 No hay incidencias pendientes.</td></tr>`;
+      } else {
+        data.incidenciasPendientes.forEach(item => {
+          let hallazgos = [];
+          if (item.c1 === "NO CUMPLE") hallazgos.push("Limpieza");
+          if (item.c2 === "NO CUMPLE") hallazgos.push("Precios");
+          if (item.c3 === "NO CUMPLE") hallazgos.push("Muestras");
 
-        const ctxBar = document.getElementById('chartIncidenciasTienda').getContext('2d');
-        if (chartBar) chartBar.destroy();
-        chartBar = new Chart(ctxBar, {
-          type: 'bar',
-          data: {
-            labels: data.resumenTiendas.map(t => t.tienda),
-            datasets: [{ label: 'Incidencias Pendientes', data: data.resumenTiendas.map(t => t.incidencias), backgroundColor: '#F59E0B' }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+          let imgBtn = item.imagenUrl ? `<a href="${item.imagenUrl}" target="_blank" class="text-blue-400 underline text-xs hover:text-blue-300">Ver Foto</a>` : "N/A";
+
+          tbody.innerHTML += `
+            <tr class="hover:bg-slate-750 transition">
+              <td class="p-3 text-xs text-slate-400">#${item.fila}</td>
+              <td class="p-3 text-xs">${item.fecha}</td>
+              <td class="p-3 font-semibold text-white">${item.tienda}</td>
+              <td class="p-3 text-xs">${item.asesor}</td>
+              <td class="p-3 text-xs">${item.subfamilia}</td>
+              <td class="p-3 text-xs text-red-400 font-medium">${hallazgos.join(", ")}</td>
+              <td class="p-3 text-xs italic text-slate-400">"${item.observacion}"</td>
+              <td class="p-3 text-xs">${imgBtn}</td>
+              <td class="p-3 text-center">
+                <button onclick="marcarSolventado(${item.fila})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded transition shadow">
+                  ✓ Solventar
+                </button>
+              </td>
+            </tr>
+          `;
         });
       }
-    </script>
-  </body>
+
+      // 3. Render Charts
+      renderCharts(data);
+    }
+
+    function marcarSolventado(fila) {
+      if (confirm(`¿Marcar la fila #${fila} como SOLVENTADA?`)) {
+        fetch(WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "marcarIncidenciaSolventada",
+            fila: fila
+          })
+        })
+        .then(() => {
+          alert(`✅ Solicitud enviada. La incidencia #${fila} fue marcada como solventada.`);
+          cargarDatos();
+        })
+        .catch(err => {
+          console.error("Error marcando incidencia:", err);
+          alert("Error al intentar marcar la incidencia.");
+        });
+      }
+    }
+
+    function renderCharts(data) {
+      const stats = data.stats || { totalCumple: 0, totalIncidencias: 0 };
+
+      // Gráfica de Pastel (Doughnut)
+      const ctxPie = document.getElementById('chartCumplimiento').getContext('2d');
+      if (chartPie) chartPie.destroy();
+      chartPie = new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+          labels: ['Cumple', 'No Cumple'],
+          datasets: [{
+            data: [stats.totalCumple, stats.totalIncidencias],
+            backgroundColor: ['#10B981', '#EF4444'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Gráfica de Barras
+      const tiendas = data.resumenTiendas || [];
+      const ctxBar = document.getElementById('chartIncidenciasTienda').getContext('2d');
+      if (chartBar) chartBar.destroy();
+      chartBar = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: tiendas.map(t => t.tienda),
+          datasets: [{
+            label: 'Incidencias Pendientes',
+            data: tiendas.map(t => t.incidencias),
+            backgroundColor: '#F59E0B',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
 </html>
