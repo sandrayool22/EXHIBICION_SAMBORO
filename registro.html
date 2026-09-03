@@ -183,6 +183,21 @@
   </div>
 
   <script>
+
+    <script>
+  // VERIFICAR QUE EXISTE UNA SESIÓN ACTIVA
+  const usuarioGuardado = localStorage.getItem('usuarioSamboro');
+  
+  if (!usuarioGuardado) {
+    // Si no ha iniciado sesión, lo regresa al Login de inmediato
+    window.location.href = 'index.html';
+  }
+
+  const usuario = JSON.parse(usuarioGuardado);
+  console.log("Sesión iniciada como:", usuario.codigo);
+
+  // NOTA: No agregues ningún botón de "Cerrar Sesión" ni nada que ejecute localStorage.clear()
+</script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCpFBz8v7gU4aHgfdhkuxyTkxe_lWxtHqBcgjIjqQ52oWKRBYoDqLpgW19ha2NR6fU/exec";
     
     
