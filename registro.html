@@ -183,23 +183,7 @@
   </div>
 
   <script>
-
-    <script>
-  // VERIFICAR QUE EXISTE UNA SESIÓN ACTIVA
-  const usuarioGuardado = localStorage.getItem('usuarioSamboro');
-  
-  if (!usuarioGuardado) {
-    // Si no ha iniciado sesión, lo regresa al Login de inmediato
-    window.location.href = 'index.html';
-  }
-
-  const usuario = JSON.parse(usuarioGuardado);
-  console.log("Sesión iniciada como:", usuario.codigo);
-
-  // NOTA: No agregues ningún botón de "Cerrar Sesión" ni nada que ejecute localStorage.clear()
-</script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCpFBz8v7gU4aHgfdhkuxyTkxe_lWxtHqBcgjIjqQ52oWKRBYoDqLpgW19ha2NR6fU/exec";
-    
     
     const CRITERIOS = [
       "1. ¿Exhibidor limpio y en buen estado?",
@@ -210,6 +194,7 @@
     const fotosBase64 = {};
 
     document.addEventListener('DOMContentLoaded', () => {
+      // VERIFICAR QUE EXISTE UNA SESIÓN ACTIVA
       const usuarioGuardado = localStorage.getItem('usuarioSamboro');
       if (!usuarioGuardado) {
         window.location.href = 'index.html';
@@ -367,9 +352,18 @@
       });
     });
 
+    // =========================================================
+    // CERRAR SESIÓN PROTEGIDO POR CONTRASEÑA "PIEZA369"
+    // =========================================================
     document.getElementById('btnLogout').addEventListener('click', () => {
-      localStorage.removeItem('usuarioSamboro');
-      window.location.href = 'index.html';
+      const password = prompt("Ingrese la clave de administrador para cerrar sesión:");
+      
+      if (password === "PIEZA369") {
+        localStorage.removeItem('usuarioSamboro');
+        window.location.href = 'index.html';
+      } else if (password !== null) {
+        alert("Contraseña incorrecta. No se puede cerrar sesión.");
+      }
     });
   </script>
 
