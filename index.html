@@ -124,61 +124,81 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCpFBz8v7gU4aHgfdhkuxyTkxe_lWxtHqBcgjIjqQ52oWKRBYoDqLpgW19ha2NR6fU/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCpFBz8v7gU4aHgfdhkuxyTkxe_lWxtHqBcgjIjqQ52oWKRBYoDqLpgW19ha2NR6fU/exec";
+  
+  // Lista de usuarios que van al Dashboard
+  const jefesDashboard = ["CGALVEZ", "MCORDON", "JMRAGUAY", "SYOOL"];
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const codigo = document.getElementById('codigo').value.trim();
-      const loader = document.getElementById('loader');
-      const errorMsg = document.getElementById('errorMsg');
-      const btnSubmit = document.getElementById('btnSubmit');
+  // =========================================================
+  // VERIFICAR SI YA HAY SESIÓN GUARDADA
+  // =========================================================
+  const usuarioGuardado = localStorage.getItem('usuarioSamboro');
+  if (usuarioGuardado) {
+    try {
+      const usuarioObj = JSON.parse(usuarioGuardado);
+      const codigoGuardado = String(usuarioObj.codigo || "").trim().toUpperCase();
 
-      loader.style.display = 'block';
-      errorMsg.style.display = 'none';
-      btnSubmit.disabled = true;
+      if (jefesDashboard.includes(codigoGuardado)) {
+        window.location.href = 'dashboard.html';
+      } else {
+        window.location.href = 'registro.html';
+      }
+    } catch(e) {
+      localStorage.removeItem('usuarioSamboro'); // Si el dato guardado falló, lo limpia
+    }
+  }
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ codigo: codigo })
-      })
-      .then(res => res.json())
-      .then(data => {
-        loader.style.display = 'none';
-        btnSubmit.disabled = false;
+  // =========================================================
+  // MANEJO DEL FORMULARIO DE LOGIN
+  // =========================================================
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const codigo = document.getElementById('codigo').value.trim();
+    const loader = document.getElementById('loader');
+    const errorMsg = document.getElementById('errorMsg');
+    const btnSubmit = document.getElementById('btnSubmit');
 
-        if (data.success) {
-          // Guardar datos del usuario en localStorage
-          localStorage.setItem('usuarioSamboro', JSON.stringify(data.usuario));
+    loader.style.display = 'block';
+    errorMsg.style.display = 'none';
+    btnSubmit.disabled = true;
 
-          // LISTA DE USUARIOS PERMITIDOS PARA EL DASHBOARD (En Mayúsculas)
-          const jefesDashboard = ["CGALVEZ", "MCORDON", "JMRAGUAY", "SYOOL"];
-          
-          // Obtener el código de usuario en mayúsculas
-          const usuarioCodigo = String(data.usuario.codigo || "").trim().toUpperCase();
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ codigo: codigo })
+    })
+    .then(res => res.json())
+    .then(data => {
+      loader.style.display = 'none';
+      btnSubmit.disabled = false;
 
-          // REDIRECCIÓN SEGÚN EL USUARIO
-          if (jefesDashboard.includes(usuarioCodigo)) {
-            window.location.href = 'Dashboard.html';
-          } else {
-            window.location.href = 'registro.html';
-          }
+      if (data.success) {
+        // Guarda la sesión permanentemente en el navegador
+        localStorage.setItem('usuarioSamboro', JSON.stringify(data.usuario));
+        
+        const usuarioCodigo = String(data.usuario.codigo || "").trim().toUpperCase();
 
+        if (jefesDashboard.includes(usuarioCodigo)) {
+          window.location.href = 'dashboard.html';
         } else {
-          errorMsg.innerText = data.message;
-          errorMsg.style.display = 'block';
+          window.location.href = 'registro.html';
         }
-      })
-      .catch(err => {
-        loader.style.display = 'none';
-        btnSubmit.disabled = false;
-        errorMsg.innerText = "Error de conexión con la base de datos.";
+
+      } else {
+        errorMsg.innerText = data.message;
         errorMsg.style.display = 'block';
-      });
+      }
+    })
+    .catch(err => {
+      loader.style.display = 'none';
+      btnSubmit.disabled = false;
+      errorMsg.innerText = "Error de conexión con la base de datos.";
+      errorMsg.style.display = 'block';
     });
-  </script>
+  });
+</script>
 
 </body>
 </html>
