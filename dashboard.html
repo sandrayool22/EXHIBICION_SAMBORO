@@ -186,14 +186,14 @@
     }
 
 // =========================================================
-// FILTRADO DE DATOS SEGÚN EL ROL DE USUARIO (COINCIDENCIA EXACTA)
+// FILTRADO DE DATOS CON HOMOLOGACIÓN DE TIENDAS (OBELISCO = VITERRA)
 // =========================================================
 function aplicarFiltroTiendas() {
   if (!datosCompletosServidor) return;
 
   let tiendasAFiltrar = [...tiendasPermitidas];
 
-  // Si es Gerente y seleccionó una tienda específica del menú desplegable
+  // Si es Gerente y seleccionó una tienda del selector
   const selectGerente = document.getElementById("selectFiltroTienda");
   if (selectGerente && selectGerente.value !== "TODAS" && !selectGerente.closest('#containerFiltroGerente').classList.contains('hidden')) {
     tiendasAFiltrar = [selectGerente.value];
@@ -203,22 +203,30 @@ function aplicarFiltroTiendas() {
   let incidenciasFiltradas = datosCompletosServidor.incidenciasPendientes || [];
 
   if (tiendasAFiltrar.length > 0) {
-    // Normalización de nombres para evitar colisiones entre "Z7" y "Z7 OUTLET"
-    const normalizar = (texto) => String(texto || "").trim().toUpperCase();
-    const listaPermitidaNorm = tiendasAFiltrar.map(t => normalizar(t));
+    // Función de normalización que convierte VITERRA y OBELISCO al mismo nombre estándar
+    const normalizarTienda = (nombre) => {
+      let t = String(nombre || "").trim().toUpperCase();
+      if (t === "VITERRA" || t === "OBELISCO") {
+        return "OBELISCO / VITERRA"; // Nombre unificado para la comparación
+      }
+      return t;
+    };
 
-    // Filtrar resúmenes por coincidencia EXACTA
+    // Crear lista de tiendas permitidas normalizada
+    const listaPermitidaNorm = tiendasAFiltrar.map(t => normalizarTienda(t));
+
+    // Filtrar tarjetas/resumen por coincidencia normalizada
     resumenFiltrado = resumenFiltrado.filter(t => 
-      listaPermitidaNorm.includes(normalizar(t.tienda))
+      listaPermitidaNorm.includes(normalizarTienda(t.tienda))
     );
 
-    // Filtrar incidencias por coincidencia EXACTA
+    // Filtrar tabla de incidencias por coincidencia normalizada
     incidenciasFiltradas = incidenciasFiltradas.filter(i => 
-      listaPermitidaNorm.includes(normalizar(i.tienda))
+      listaPermitidaNorm.includes(normalizarTienda(i.tienda))
     );
   }
 
-  // Recalcular estadísticas filtradas para las gráficas
+  // Recalcular el total de incidencias filtradas
   let totalIncidencias = 0;
   resumenFiltrado.forEach(t => {
     totalIncidencias += t.incidencias;
