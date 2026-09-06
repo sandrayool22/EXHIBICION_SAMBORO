@@ -13,16 +13,33 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen p-6">
 
   <!-- Header -->
-  <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg gap-4">
     <div>
       <h1 class="text-2xl font-bold text-white flex items-center gap-2">
         📊 Control de Exhibiciones — Dashboard
       </h1>
-      <p class="text-slate-400 text-sm mt-1">Seguimiento de cumplimiento por tienda, incidencias pendientes y trazabilidad</p>
+      <p class="text-slate-400 text-sm mt-1">
+        Usuario: <span id="lblUsuario" class="text-slate-200 font-semibold">--</span> | 
+        Rol: <span id="lblRol" class="text-slate-200 font-semibold">--</span>
+      </p>
     </div>
-    <button onclick="cargarDatos()" class="mt-4 md:mt-0 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
-      🔄 Actualizar
-    </button>
+    
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Filtro exclusivo para Gerente -->
+      <div id="containerFiltroGerente" class="hidden">
+        <select id="selectFiltroTienda" onchange="aplicarFiltroTiendas()" class="bg-slate-700 text-white text-sm px-3 py-2 rounded-lg border border-slate-600 focus:outline-none">
+          <option value="TODAS">Todas las tiendas</option>
+        </select>
+      </div>
+
+      <button onclick="cargarDatos()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2 text-sm">
+        🔄 Actualizar
+      </button>
+
+      <button onclick="cerrarSesion()" class="bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-2 text-sm">
+        🔒 Cerrar Sesión
+      </button>
+    </div>
   </div>
 
   <!-- 1. CUMPLIMIENTO POR TIENDA -->
@@ -35,7 +52,7 @@
   <h2 class="text-lg font-bold mb-4 text-slate-200">2. Estadísticas de Resolución</h2>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow">
-      <h3 class="text-sm font-bold mb-4 text-slate-300">Cumplimiento General (Global)</h3>
+      <h3 class="text-sm font-bold mb-4 text-slate-300">Cumplimiento General</h3>
       <div class="w-60 h-60 mx-auto">
         <canvas id="chartCumplimiento"></canvas>
       </div>
@@ -77,15 +94,65 @@
   </div>
 
   <script>
-    // Configura aquí la URL de tu Web App desplegada en Apps Script
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyklV95J3So4M0R9xABQ8lGIrG3tyrN0rb0qm7V-06zjmw_R8evl9CDFlC9APCkwYU/exec";
-                        
+    
     let chartPie, chartBar;
+    let usuarioSesion = null;
+    let datosCompletosServidor = null;
+    let tiendasPermitidas = [];
 
-    document.addEventListener("DOMContentLoaded", cargarDatos);
+    // =========================================================
+    // VERIFICACIÓN DE SESIÓN AL CARGAR
+    // =========================================================
+    document.addEventListener("DOMContentLoaded", () => {
+      const usuarioGuardado = localStorage.getItem('usuarioSamboro');
+      if (!usuarioGuardado) {
+        window.location.href = 'index.html';
+        return;
+      }
 
+      try {
+        usuarioSesion = JSON.parse(usuarioGuardado);
+        document.getElementById('lblUsuario').innerText = usuarioSesion.codigo || "--";
+        document.getElementById('lblRol').innerText = usuarioSesion.rol || "--";
+
+        // Determinar permisos de tienda
+        const rolNormalizado = String(usuarioSesion.rol || "").toUpperCase();
+        const codigoNormalizado = String(usuarioSesion.codigo || "").toUpperCase();
+
+        if (rolNormalizado.includes("GERENTE") || codigoNormalizado === "CGALVEZ") {
+          document.getElementById('containerFiltroGerente').classList.remove('hidden');
+          tiendasPermitidas = []; // vacio indica ver todas
+        } else {
+          // Extraer las tiendas asignadas al jefe (ej: "San Cristóbal / Centro Logístico" -> ["SAN CRISTÓBAL", "CENTRO LOGÍSTICO"])
+          const rawTiendas = String(usuarioSesion.tienda || "").toUpperCase();
+          tiendasPermitidas = rawTiendas.split('/').map(t => t.trim()).filter(t => t.length > 0);
+        }
+
+        cargarDatos();
+      } catch(e) {
+        localStorage.removeItem('usuarioSamboro');
+        window.location.href = 'index.html';
+      }
+    });
+
+    // =========================================================
+    // CERRAR SESIÓN PROTEGIDO POR CONTRASEÑA
+    // =========================================================
+    function cerrarSesion() {
+      const password = prompt("Ingrese la clave de administrador para cerrar sesión:");
+      if (password === "PIEZA369") {
+        localStorage.removeItem('usuarioSamboro');
+        window.location.href = 'index.html';
+      } else if (password !== null) {
+        alert("Contraseña incorrecta. No se puede cerrar sesión.");
+      }
+    }
+
+    // =========================================================
+    // OBTIENE DATOS DEL BACKEND
+    // =========================================================
     function cargarDatos() {
-      // Indicadores visuales de carga
       document.getElementById("gridTiendas").innerHTML = `<div class="text-slate-400 col-span-full py-4 text-center bg-slate-800 rounded-xl border border-slate-700">🔄 Cargando datos del servidor...</div>`;
       document.getElementById("tablaIncidencias").innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">🔄 Cargando incidencias...</td></tr>`;
 
@@ -95,22 +162,83 @@
           return response.json();
         })
         .then(data => {
-          renderDashboard(data);
+          datosCompletosServidor = data;
+
+          // Si es Gerente y el select está vacío, popular opciones del filtro
+          const selectGerente = document.getElementById("selectFiltroTienda");
+          if (!selectGerente.classList.contains("populateloaded") && data.resumenTiendas) {
+            data.resumenTiendas.forEach(t => {
+              const opt = document.createElement("option");
+              opt.value = t.tienda;
+              opt.innerText = t.tienda;
+              selectGerente.appendChild(opt);
+            });
+            selectGerente.classList.add("populateloaded");
+          }
+
+          aplicarFiltroTiendas();
         })
         .catch(err => {
           console.error("Error al cargar datos:", err);
-          document.getElementById("gridTiendas").innerHTML = `<div class="text-red-400 col-span-full py-4 text-center bg-slate-800 rounded-xl border border-red-500/50">❌ Error al cargar los datos. Verifica la URL de tu Web App.</div>`;
+          document.getElementById("gridTiendas").innerHTML = `<div class="text-red-400 col-span-full py-4 text-center bg-slate-800 rounded-xl border border-red-500/50">❌ Error al cargar los datos. Verifica la conexión.</div>`;
           document.getElementById("tablaIncidencias").innerHTML = `<tr><td colspan="9" class="p-4 text-center text-red-400">Error al cargar la tabla de incidencias.</td></tr>`;
         });
     }
 
+    // =========================================================
+    // FILTRADO DE DATOS SEGÚN EL ROL DE USUARIO
+    // =========================================================
+    function aplicarFiltroTiendas() {
+      if (!datosCompletosServidor) return;
+
+      let tiendasAFiltrar = [...tiendasPermitidas];
+
+      // Si es Gerente y seleccionó una tienda específica
+      const selectGerente = document.getElementById("selectFiltroTienda");
+      if (selectGerente && selectGerente.value !== "TODAS" && !selectGerente.closest('#containerFiltroGerente').classList.contains('hidden')) {
+        tiendasAFiltrar = [selectGerente.value];
+      }
+
+      let resumenFiltrado = datosCompletosServidor.resumenTiendas || [];
+      let incidenciasFiltradas = datosCompletosServidor.incidenciasPendientes || [];
+
+      if (tiendasAFiltrar.length > 0) {
+        resumenFiltrado = resumenFiltrado.filter(t => 
+          tiendasAFiltrar.some(tf => t.tienda.toUpperCase().includes(tf.toUpperCase()) || tf.toUpperCase().includes(t.tienda.toUpperCase()))
+        );
+        incidenciasFiltradas = incidenciasFiltradas.filter(i => 
+          tiendasAFiltrar.some(tf => i.tienda.toUpperCase().includes(tf.toUpperCase()) || tf.toUpperCase().includes(i.tienda.toUpperCase()))
+        );
+      }
+
+      // Recalcular estadísticas filtradas para las gráficas
+      let totalCumple = 0;
+      let totalIncidencias = 0;
+
+      resumenFiltrado.forEach(t => {
+        totalIncidencias += t.incidencias;
+      });
+
+      renderDashboard({
+        resumenTiendas: resumenFiltrado,
+        incidenciasPendientes: incidenciasFiltradas,
+        stats: {
+          totalCumple: datosCompletosServidor.stats ? datosCompletosServidor.stats.totalCumple : 0,
+          totalIncidencias: totalIncidencias
+        }
+      });
+    }
+
+    // =========================================================
+    // RENDERIZADO VISUAL EN PANTALLA
+    // =========================================================
     function renderDashboard(data) {
-      // 1. Render Tarjetas por Tienda
+      // 1. Tarjetas por Tienda
       const grid = document.getElementById("gridTiendas");
       grid.innerHTML = "";
 
       if (!data.resumenTiendas || data.resumenTiendas.length === 0) {
-        grid.innerHTML = `<div class="text-slate-400 col-span-full py-4 text-center bg-slate-800 rounded-xl">No hay tiendas registradas.</div>`;
+        grid.innerHTML = `<div class="text-slate-400 col-span-full py-4 text-center bg-slate-800 rounded-xl">No hay tiendas registradas para esta vista.</div>`;
       } else {
         data.resumenTiendas.forEach(t => {
           let color = t.totalReportes > 0 ? (t.incidencias === 0 ? "border-emerald-500" : "border-amber-500") : "border-red-500";
@@ -130,7 +258,7 @@
         });
       }
 
-      // 2. Render Tabla
+      // 2. Tabla de Incidencias
       const tbody = document.getElementById("tablaIncidencias");
       tbody.innerHTML = "";
       const pendientesCount = data.incidenciasPendientes ? data.incidenciasPendientes.length : 0;
@@ -167,7 +295,7 @@
         });
       }
 
-      // 3. Render Charts
+      // 3. Gráficas
       renderCharts(data);
     }
 
