@@ -126,12 +126,10 @@
   <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCpFBz8v7gU4aHgfdhkuxyTkxe_lWxtHqBcgjIjqQ52oWKRBYoDqLpgW19ha2NR6fU/exec";
   
-  // Lista de usuarios que van al Dashboard
-  const jefesDashboard = ["CGALVEZ", "MCORDON", "JMRAGUAY", "SYOOL"];
+  // Lista actualizada de usuarios con acceso al Dashboard (Jefes y Gerente)
+  const jefesDashboard = ["CGALVEZ", "MCORDON", "JMRAGUAY", "SYOOL", "ECABRERA"];
 
-  // =========================================================
-  // VERIFICAR SI YA HAY SESIÓN GUARDADA
-  // =========================================================
+  // VERIFICAR SESIÓN GUARDADA
   const usuarioGuardado = localStorage.getItem('usuarioSamboro');
   if (usuarioGuardado) {
     try {
@@ -144,13 +142,11 @@
         window.location.href = 'registro.html';
       }
     } catch(e) {
-      localStorage.removeItem('usuarioSamboro'); // Si el dato guardado falló, lo limpia
+      localStorage.removeItem('usuarioSamboro');
     }
   }
 
-  // =========================================================
   // MANEJO DEL FORMULARIO DE LOGIN
-  // =========================================================
   document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -175,9 +171,7 @@
       btnSubmit.disabled = false;
 
       if (data.success) {
-        // Guarda la sesión permanentemente en el navegador
         localStorage.setItem('usuarioSamboro', JSON.stringify(data.usuario));
-        
         const usuarioCodigo = String(data.usuario.codigo || "").trim().toUpperCase();
 
         if (jefesDashboard.includes(usuarioCodigo)) {
@@ -185,7 +179,6 @@
         } else {
           window.location.href = 'registro.html';
         }
-
       } else {
         errorMsg.innerText = data.message;
         errorMsg.style.display = 'block';
