@@ -185,49 +185,54 @@
         });
     }
 
-    // =========================================================
-    // FILTRADO DE DATOS SEGÚN EL ROL DE USUARIO
-    // =========================================================
-    function aplicarFiltroTiendas() {
-      if (!datosCompletosServidor) return;
+// =========================================================
+// FILTRADO DE DATOS SEGÚN EL ROL DE USUARIO (COINCIDENCIA EXACTA)
+// =========================================================
+function aplicarFiltroTiendas() {
+  if (!datosCompletosServidor) return;
 
-      let tiendasAFiltrar = [...tiendasPermitidas];
+  let tiendasAFiltrar = [...tiendasPermitidas];
 
-      // Si es Gerente y seleccionó una tienda específica
-      const selectGerente = document.getElementById("selectFiltroTienda");
-      if (selectGerente && selectGerente.value !== "TODAS" && !selectGerente.closest('#containerFiltroGerente').classList.contains('hidden')) {
-        tiendasAFiltrar = [selectGerente.value];
-      }
+  // Si es Gerente y seleccionó una tienda específica del menú desplegable
+  const selectGerente = document.getElementById("selectFiltroTienda");
+  if (selectGerente && selectGerente.value !== "TODAS" && !selectGerente.closest('#containerFiltroGerente').classList.contains('hidden')) {
+    tiendasAFiltrar = [selectGerente.value];
+  }
 
-      let resumenFiltrado = datosCompletosServidor.resumenTiendas || [];
-      let incidenciasFiltradas = datosCompletosServidor.incidenciasPendientes || [];
+  let resumenFiltrado = datosCompletosServidor.resumenTiendas || [];
+  let incidenciasFiltradas = datosCompletosServidor.incidenciasPendientes || [];
 
-      if (tiendasAFiltrar.length > 0) {
-        resumenFiltrado = resumenFiltrado.filter(t => 
-          tiendasAFiltrar.some(tf => t.tienda.toUpperCase().includes(tf.toUpperCase()) || tf.toUpperCase().includes(t.tienda.toUpperCase()))
-        );
-        incidenciasFiltradas = incidenciasFiltradas.filter(i => 
-          tiendasAFiltrar.some(tf => i.tienda.toUpperCase().includes(tf.toUpperCase()) || tf.toUpperCase().includes(i.tienda.toUpperCase()))
-        );
-      }
+  if (tiendasAFiltrar.length > 0) {
+    // Normalización de nombres para evitar colisiones entre "Z7" y "Z7 OUTLET"
+    const normalizar = (texto) => String(texto || "").trim().toUpperCase();
+    const listaPermitidaNorm = tiendasAFiltrar.map(t => normalizar(t));
 
-      // Recalcular estadísticas filtradas para las gráficas
-      let totalCumple = 0;
-      let totalIncidencias = 0;
+    // Filtrar resúmenes por coincidencia EXACTA
+    resumenFiltrado = resumenFiltrado.filter(t => 
+      listaPermitidaNorm.includes(normalizar(t.tienda))
+    );
 
-      resumenFiltrado.forEach(t => {
-        totalIncidencias += t.incidencias;
-      });
+    // Filtrar incidencias por coincidencia EXACTA
+    incidenciasFiltradas = incidenciasFiltradas.filter(i => 
+      listaPermitidaNorm.includes(normalizar(i.tienda))
+    );
+  }
 
-      renderDashboard({
-        resumenTiendas: resumenFiltrado,
-        incidenciasPendientes: incidenciasFiltradas,
-        stats: {
-          totalCumple: datosCompletosServidor.stats ? datosCompletosServidor.stats.totalCumple : 0,
-          totalIncidencias: totalIncidencias
-        }
-      });
+  // Recalcular estadísticas filtradas para las gráficas
+  let totalIncidencias = 0;
+  resumenFiltrado.forEach(t => {
+    totalIncidencias += t.incidencias;
+  });
+
+  renderDashboard({
+    resumenTiendas: resumenFiltrado,
+    incidenciasPendientes: incidenciasFiltradas,
+    stats: {
+      totalCumple: datosCompletosServidor.stats ? datosCompletosServidor.stats.totalCumple : 0,
+      totalIncidencias: totalIncidencias
     }
+  });
+}
 
     // =========================================================
     // RENDERIZADO VISUAL EN PANTALLA
