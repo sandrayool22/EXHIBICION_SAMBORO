@@ -1,3 +1,6 @@
+Aquí tienes el código completo de tu **`index.html`** con la lógica de bloqueo por día integrada en el frontend, manteniendo el botón *"No se tiene exhibición"* y las validaciones previas.
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -69,7 +72,6 @@
       transition: opacity 0.3s ease;
     }
 
-    /* Estado visual cuando la familia no tiene exhibición */
     .family-card.disabled-card {
       opacity: 0.6;
       background: #F1F5F9;
@@ -215,7 +217,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTmqvGooH4uvOMaW4M9xyxELDmsPHVMMyE6yeSn2zRY9cXZ_Snlks170fR3f-wcGY/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCpFBz8v7gU4aHgfdhkuxyTkxe_lWxtHqBcgjIjqQ52oWKRBYoDqLpgW19ha2NR6fU/exec";
     
     const CRITERIOS = [
       "1. ¿Exhibidor limpio y en buen estado?",
@@ -224,6 +226,23 @@
     ];
 
     const fotosBase64 = {};
+
+    // Función para bloquear la pantalla si ya envió hoy
+    function bloquearFormularioPorHoy() {
+      const container = document.getElementById('dynamicFamiliesContainer');
+      const btnSubmit = document.getElementById('btnSubmit');
+      
+      btnSubmit.style.display = 'none';
+      container.innerHTML = `
+        <div style="text-align: center; padding: 24px 16px; background: #FEF2F2; border: 1px solid #FECDD3; border-radius: 12px; color: #991B1B;">
+          <span style="font-size: 2.5rem;">✅</span>
+          <h3 style="margin-top: 8px; font-size: 1.1rem; font-weight: 800;">Reporte del día completado</h3>
+          <p style="margin-top: 6px; font-size: 0.85rem; color: #7F1D1D; line-height: 1.4;">
+            Ya has ingresado la evaluación correspondiente a hoy. Podrás realizar un nuevo reporte el día de mañana.
+          </p>
+        </div>
+      `;
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       // VERIFICAR QUE EXISTE UNA SESIÓN ACTIVA
@@ -237,6 +256,15 @@
       document.getElementById('txtTienda').innerText = usuario.tienda || "Samboro";
       document.getElementById('txtUsuario').innerText = usuario.codigo;
       document.getElementById('txtRol').innerText = usuario.rol;
+
+      // VERIFICAR SI YA REPORTÓ EL DÍA DE HOY
+      const hoy = new Date().toISOString().split('T')[0];
+      const ultimoEnvio = localStorage.getItem(`ultimoEnvio_${usuario.codigo}`);
+
+      if (ultimoEnvio === hoy) {
+        bloquearFormularioPorHoy();
+        return;
+      }
 
       const container = document.getElementById('dynamicFamiliesContainer');
       const subfamilias = usuario.subfamilias ? usuario.subfamilias.split(',') : [];
@@ -295,13 +323,12 @@
       });
     });
 
-    // Función para alternar el estado (Habilitado / Deshabilitado)
+    // Activar/Desactivar campos al marcar "No se tiene exhibición"
     window.toggleExhibicion = function(subIdx) {
       const isChecked = document.getElementById(`no_exhibicion_${subIdx}`).checked;
       const card = document.getElementById(`card_${subIdx}`);
       const fileContainer = document.getElementById(`file_container_${subIdx}`);
       
-      // Obtener todos los inputs dentro de esta subfamilia
       const radios = card.querySelectorAll('input[type="radio"]');
       const textarea = document.getElementById(`obs_${subIdx}`);
       const fileInput = document.getElementById(`foto_${subIdx}`);
@@ -312,19 +339,16 @@
         card.classList.add('disabled-card');
         fileContainer.classList.add('disabled');
 
-        // Deshabilitar y quitar obligatoriedad de Radios
         radios.forEach(r => {
           r.checked = false;
           r.disabled = true;
           r.removeAttribute('required');
         });
 
-        // Deshabilitar y limpiar Observación
         textarea.value = "";
         textarea.disabled = true;
         textarea.removeAttribute('required');
 
-        // Limpiar foto subida
         fileInput.disabled = true;
         fileInput.value = "";
         delete fotosBase64[subIdx];
@@ -335,7 +359,6 @@
         card.classList.remove('disabled-card');
         fileContainer.classList.remove('disabled');
 
-        // Habilitar y restaurar requerimientos
         radios.forEach(r => {
           r.disabled = false;
           r.setAttribute('required', 'required');
@@ -349,7 +372,6 @@
       }
     };
 
-    // Auxiliar para evitar disparar la carga de foto si está deshabilitado
     window.triggerFotoUpload = function(subIdx) {
       const isChecked = document.getElementById(`no_exhibicion_${subIdx}`).checked;
       if (!isChecked) {
@@ -450,15 +472,23 @@
         btnSubmit.innerText = "Enviar Evaluación Completa";
 
         if (data.success) {
+          // MARCAR FECHA DE ENVÍO EXITOSO
+          const hoy = new Date().toISOString().split('T')[0];
+          localStorage.setItem(`ultimoEnvio_${usuario.codigo}`, hoy);
+
           statusMsg.className = "status-msg success";
           statusMsg.innerText = "¡Evaluación guardada con éxito!";
           statusMsg.style.display = 'block';
           
           document.getElementById('bitacoraForm').reset();
           document.querySelectorAll('.preview-img').forEach(img => img.style.display = 'none');
-          // Restaurar estados si estaban deshabilitados
-          subfamilias.forEach((_, idx) => toggleExhibicion(idx));
           window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          // Bloquear pantalla tras 1.5 segundos
+          setTimeout(() => {
+            bloquearFormularioPorHoy();
+          }, 1500);
+
         } else {
           statusMsg.className = "status-msg error";
           statusMsg.innerText = data.message || "Error al guardar.";
@@ -491,3 +521,5 @@
 
 </body>
 </html>
+
+```
