@@ -66,14 +66,41 @@
       flex-direction: column;
       gap: 14px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      transition: opacity 0.3s ease;
+    }
+
+    /* Estado visual cuando la familia no tiene exhibición */
+    .family-card.disabled-card {
+      opacity: 0.6;
+      background: #F1F5F9;
+    }
+
+    .family-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
     }
 
     .family-title {
       font-size: 1rem;
       font-weight: 800;
       color: var(--primary);
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 8px;
+    }
+
+    .no-exhibicion-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--danger);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      background: #FEF2F2;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #FECDD3;
     }
 
     .criterio-box {
@@ -125,6 +152,11 @@
       cursor: pointer;
       font-size: 0.8rem;
       color: #64748B;
+    }
+
+    .file-container.disabled {
+      cursor: not-allowed;
+      background: #E2E8F0;
     }
 
     .preview-img {
@@ -219,6 +251,7 @@
         const subName = sub.trim();
         const card = document.createElement('div');
         card.className = 'family-card';
+        card.id = `card_${subIdx}`;
         
         let htmlCriterios = '';
         CRITERIOS.forEach((crit, critIdx) => {
@@ -235,24 +268,94 @@
         });
 
         card.innerHTML = `
-          <div class="family-title">📌 Subfamilia: ${subName}</div>
-          ${htmlCriterios}
-          <div class="form-group">
-            <label style="font-size:0.8rem; font-weight:700;">Observación / Hallazgo (${subName})</label>
-            <textarea id="obs_${subIdx}" rows="2" placeholder="Detalle adicional sobre ${subName}..." required></textarea>
+          <div class="family-header">
+            <div class="family-title">📌 Subfamilia: ${subName}</div>
+            <label class="no-exhibicion-label">
+              <input type="checkbox" id="no_exhibicion_${subIdx}" onchange="toggleExhibicion(${subIdx})">
+              No se tiene exhibición
+            </label>
           </div>
-          <div class="form-group">
-            <label style="font-size:0.8rem; font-weight:700;">Evidencia Fotográfica (${subName})</label>
-            <div class="file-container" onclick="document.getElementById('foto_${subIdx}').click()">
-              <span id="label_foto_${subIdx}">📷 Subir / Tomar foto para ${subName}</span>
-              <input type="file" id="foto_${subIdx}" accept="image/*" capture="environment" style="display:none;" onchange="convertirFoto(${subIdx})">
-              <img id="prev_${subIdx}" class="preview-img" alt="Vista previa">
+          <div id="body_${subIdx}" style="display: flex; flex-direction: column; gap: 14px;">
+            ${htmlCriterios}
+            <div class="form-group">
+              <label style="font-size:0.8rem; font-weight:700;">Observación / Hallazgo (${subName})</label>
+              <textarea id="obs_${subIdx}" rows="2" placeholder="Detalle adicional sobre ${subName}..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label style="font-size:0.8rem; font-weight:700;">Evidencia Fotográfica (${subName})</label>
+              <div class="file-container" id="file_container_${subIdx}" onclick="triggerFotoUpload(${subIdx})">
+                <span id="label_foto_${subIdx}">📷 Subir / Tomar foto para ${subName}</span>
+                <input type="file" id="foto_${subIdx}" accept="image/*" capture="environment" style="display:none;" onchange="convertirFoto(${subIdx})">
+                <img id="prev_${subIdx}" class="preview-img" alt="Vista previa">
+              </div>
             </div>
           </div>
         `;
         container.appendChild(card);
       });
     });
+
+    // Función para alternar el estado (Habilitado / Deshabilitado)
+    window.toggleExhibicion = function(subIdx) {
+      const isChecked = document.getElementById(`no_exhibicion_${subIdx}`).checked;
+      const card = document.getElementById(`card_${subIdx}`);
+      const fileContainer = document.getElementById(`file_container_${subIdx}`);
+      
+      // Obtener todos los inputs dentro de esta subfamilia
+      const radios = card.querySelectorAll('input[type="radio"]');
+      const textarea = document.getElementById(`obs_${subIdx}`);
+      const fileInput = document.getElementById(`foto_${subIdx}`);
+      const imgPreview = document.getElementById(`prev_${subIdx}`);
+      const labelFoto = document.getElementById(`label_foto_${subIdx}`);
+
+      if (isChecked) {
+        card.classList.add('disabled-card');
+        fileContainer.classList.add('disabled');
+
+        // Deshabilitar y quitar obligatoriedad de Radios
+        radios.forEach(r => {
+          r.checked = false;
+          r.disabled = true;
+          r.removeAttribute('required');
+        });
+
+        // Deshabilitar y limpiar Observación
+        textarea.value = "";
+        textarea.disabled = true;
+        textarea.removeAttribute('required');
+
+        // Limpiar foto subida
+        fileInput.disabled = true;
+        fileInput.value = "";
+        delete fotosBase64[subIdx];
+        imgPreview.style.display = 'none';
+        imgPreview.src = "";
+        labelFoto.innerText = "📷 No requerida (Sin exhibición)";
+      } else {
+        card.classList.remove('disabled-card');
+        fileContainer.classList.remove('disabled');
+
+        // Habilitar y restaurar requerimientos
+        radios.forEach(r => {
+          r.disabled = false;
+          r.setAttribute('required', 'required');
+        });
+
+        textarea.disabled = false;
+        textarea.setAttribute('required', 'required');
+
+        fileInput.disabled = false;
+        labelFoto.innerText = "📷 Subir / Tomar foto";
+      }
+    };
+
+    // Auxiliar para evitar disparar la carga de foto si está deshabilitado
+    window.triggerFotoUpload = function(subIdx) {
+      const isChecked = document.getElementById(`no_exhibicion_${subIdx}`).checked;
+      if (!isChecked) {
+        document.getElementById(`foto_${subIdx}`).click();
+      }
+    };
 
     window.convertirFoto = function(subIdx) {
       const fileInput = document.getElementById(`foto_${subIdx}`);
@@ -295,14 +398,31 @@
 
       subfamilias.forEach((sub, subIdx) => {
         const subName = sub.trim();
-        evaluaciones.push({
-          subfamilia: subName,
-          criterio1: document.querySelector(`input[name="criterio_${subIdx}_0"]:checked`).value,
-          criterio2: document.querySelector(`input[name="criterio_${subIdx}_1"]:checked`).value,
-          criterio3: document.querySelector(`input[name="criterio_${subIdx}_2"]:checked`).value,
-          observacion: document.getElementById(`obs_${subIdx}`).value.trim(),
-          fotoBase64: fotosBase64[subIdx] || ""
-        });
+        const sinExhibicion = document.getElementById(`no_exhibicion_${subIdx}`).checked;
+
+        if (sinExhibicion) {
+          evaluaciones.push({
+            subfamilia: subName,
+            criterio1: "N/A",
+            criterio2: "N/A",
+            criterio3: "N/A",
+            observacion: "NO SE TIENE EXHIBICIÓN",
+            fotoBase64: ""
+          });
+        } else {
+          const crit1 = document.querySelector(`input[name="criterio_${subIdx}_0"]:checked`);
+          const crit2 = document.querySelector(`input[name="criterio_${subIdx}_1"]:checked`);
+          const crit3 = document.querySelector(`input[name="criterio_${subIdx}_2"]:checked`);
+
+          evaluaciones.push({
+            subfamilia: subName,
+            criterio1: crit1 ? crit1.value : "",
+            criterio2: crit2 ? crit2.value : "",
+            criterio3: crit3 ? crit3.value : "",
+            observacion: document.getElementById(`obs_${subIdx}`).value.trim(),
+            fotoBase64: fotosBase64[subIdx] || ""
+          });
+        }
       });
 
       const btnSubmit = document.getElementById('btnSubmit');
@@ -336,6 +456,8 @@
           
           document.getElementById('bitacoraForm').reset();
           document.querySelectorAll('.preview-img').forEach(img => img.style.display = 'none');
+          // Restaurar estados si estaban deshabilitados
+          subfamilias.forEach((_, idx) => toggleExhibicion(idx));
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           statusMsg.className = "status-msg error";
